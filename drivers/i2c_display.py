@@ -105,10 +105,10 @@ class Display:
         if self.inNav:
             if self.navPos == 0:
                 self.currentMenu = self.rootMenu
+                self.outNav()
                 self.drawMenu()
             else:
                 self.back()
-            self.inNav = False
         else:
             self.forward()
     def forward(self):
@@ -116,6 +116,7 @@ class Display:
         if current is not None: 
             if current.hasChildren():
                 self.currentMenu = current 
+                self.pos = 0
                 self.drawMenu()
     def back(self):
         if self.currentMenu.parent is None:
