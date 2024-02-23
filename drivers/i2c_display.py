@@ -1,7 +1,7 @@
 from RPLCD.i2c import CharLCD
 
 class MenuItem:
-    def __init__(self, name, action=None, update=None, parent=None):
+    def __init__(self, name, action=None, update=None, parent=None, once=None):
         self.name = name
         self.action = action
         self.update = update
@@ -46,7 +46,7 @@ class Display:
         self.drawMenu()
 
     def registerCustomChars(self):
-        chars = [  # smiley, heart, home, back, selected home, selected back
+        chars = [  # smiley, heart, home, back, home(selected), back (selected) 
             (0b00000, 0b00000, 0b01010, 0b00000, 0b00100, 0b10001, 0b01110, 0b00000),
             (0b00000, 0b01010, 0b11111, 0b11111, 0b01110, 0b00100, 0b00000, 0b00000),
             (0b00100, 0b01110, 0b11111, 0b11011, 0b11011, 0b00000, 0b00000, 0b00000),
@@ -180,6 +180,7 @@ def buildMenu():
     preheat = MenuItem("preheat")
     about = MenuItem("about")
     connection = MenuItem("connection")
+    connection.addChildren([MenuItem("ip: "), MenuItem("online?")])
 
     rootMenu.addChildren([motorControl, preheat, about, connection])
 
