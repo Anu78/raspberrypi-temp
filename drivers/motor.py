@@ -35,6 +35,9 @@ class Stepper:
         pass
     def setCompressedSteps(self): 
         pass 
+    def cleanup(self): 
+        gp.setup(self.dir, gp.IN)
+        gp.setup(self.pul, gp.IN)
 
 if __name__ == "__main__":
     motor = Stepper(pul=17, dir=27, stepsPerRevolution=3200)

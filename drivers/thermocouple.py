@@ -3,14 +3,12 @@ import time
 
 class MAX6675(object):
     def __init__(self, cs_pin, clock_pin, data_pin, units="c", board=GPIO.BCM):
-        '''Initialize Soft (Bitbang) SPI bus'''
         self.cs_pin = cs_pin
         self.clock_pin = clock_pin
         self.data_pin = data_pin
         self.units = units
         self.board = board
 
-        # Initialize needed GPIO
         GPIO.setmode(self.board)
         GPIO.setup(self.cs_pin, GPIO.OUT)
         GPIO.setup(self.clock_pin, GPIO.OUT)
@@ -20,28 +18,22 @@ class MAX6675(object):
         GPIO.output(self.cs_pin, GPIO.HIGH)
 
     def get(self):
-        '''Reads SPI bus and returns current value of thermocouple.'''
         self.read()
         self.checkErrors()
         return getattr(self, "to_" + self.units)(self.data_to_tc_temperature())
 
     def read(self):
-        '''Reads 16 bits of the SPI bus & stores as an integer in self.data.'''
         bytesin = 0
-        # Select the chip
         GPIO.output(self.cs_pin, GPIO.LOW)
-        # Read in 16 bits
         for i in range(16):
             GPIO.output(self.clock_pin, GPIO.LOW)
-            time.sleep(0.001)  # Ensure setup time is met for MAX6675
+            time.sleep(0.001)  
             bytesin = bytesin << 1
             if GPIO.input(self.data_pin):
                 bytesin |= 1
             GPIO.output(self.clock_pin, GPIO.HIGH)
-            time.sleep(0.001)  # Ensure hold time is met for MAX6675
-        # Unselect the chip
+            time.sleep(0.001)  
         GPIO.output(self.cs_pin, GPIO.HIGH)
-        # Save data
         self.data = bytesin
 
     def checkErrors(self, data_16=None):
@@ -53,18 +45,13 @@ class MAX6675(object):
             raise MAX6675Error("No Connection")  
 
     def data_to_tc_temperature(self, data_16=None):
-        '''Converts raw data from the thermocouple to temperature.'''
         if data_16 is None:
             data_16 = self.data
-        # Remove bits D0-3 (status bits) and convert remaining bits to temperature
         tc_data = ((data_16 >> 3) & 0xFFF)
         return tc_data * 0.25  
 
     def to_c(self, celsius):
         return celsius
-
-    def to_k(self, celsius):
-        return celsius + 273.15
 
     def to_f(self, celsius):
         return celsius * 9.0 / 5.0 + 32
