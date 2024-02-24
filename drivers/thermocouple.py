@@ -1,22 +1,21 @@
-import RPi.GPIO as GPIO 
+import RPi.GPIO as gp 
 import time 
 
-class MAX6675(object):
-    def __init__(self, cs_pin, clock_pin, data_pin, units="c", board=GPIO.BCM):
+class MAX6675:
+    def __init__(self, cs_pin, clock_pin, data_pin, units="c", offset=5):
         self.cs_pin = cs_pin
         self.clock_pin = clock_pin
         self.data_pin = data_pin
         self.units = units
-        self.board = board
+        self.offset = offset
 
-        GPIO.setmode(self.board)
-        GPIO.setup(self.cs_pin, GPIO.OUT)
-        GPIO.setup(self.clock_pin, GPIO.OUT)
-        GPIO.setup(self.data_pin, GPIO.IN)
+        gp.setmode(gp.BCM)
+        gp.setup(self.cs_pin, gp.OUT)
+        gp.setup(self.clock_pin, gp.OUT)
+        gp.setup(self.data_pin, gp.IN)
 
-        # Pull chip select high to make chip inactive
-        GPIO.output(self.cs_pin, GPIO.HIGH)
-
+        gp.output(self.cs_pin, gp.HIGH)
+    
     def get(self):
         self.read()
         self.checkErrors()
@@ -24,16 +23,16 @@ class MAX6675(object):
 
     def read(self):
         bytesin = 0
-        GPIO.output(self.cs_pin, GPIO.LOW)
+        gp.output(self.cs_pin, gp.LOW)
         for i in range(16):
-            GPIO.output(self.clock_pin, GPIO.LOW)
+            gp.output(self.clock_pin, gp.LOW)
             time.sleep(0.001)  
             bytesin = bytesin << 1
-            if GPIO.input(self.data_pin):
+            if gp.input(self.data_pin):
                 bytesin |= 1
-            GPIO.output(self.clock_pin, GPIO.HIGH)
+            gp.output(self.clock_pin, gp.HIGH)
             time.sleep(0.001)  
-        GPIO.output(self.cs_pin, GPIO.HIGH)
+        gp.output(self.cs_pin, gp.HIGH)
         self.data = bytesin
 
     def checkErrors(self, data_16=None):
@@ -57,8 +56,8 @@ class MAX6675(object):
         return celsius * 9.0 / 5.0 + 32
 
     def cleanup(self):
-        GPIO.setup(self.cs_pin, GPIO.IN)
-        GPIO.setup(self.clock_pin, GPIO.IN)
+        gp.setup(self.cs_pin, gp.IN)
+        gp.setup(self.clock_pin, gp.IN)
 
 class MAX6675Error(Exception):
     def __init__(self, value):
@@ -68,30 +67,25 @@ class MAX6675Error(Exception):
         return repr(self.value)
 
 if __name__ == "__main__":
-    # Configuration for both thermocouples
     common_clock_pin = 11
     common_data_pin = 9
-    units = "f"  # Change this as needed for Fahrenheit, Celsius, or Kelvin
+    units = "f"  
 
-    # Initialize two thermocouple readers
     thermocouple1 = MAX6675(cs_pin=23, clock_pin=common_clock_pin, data_pin=common_data_pin, units=units)
     thermocouple2 = MAX6675(cs_pin=24, clock_pin=common_clock_pin, data_pin=common_data_pin, units=units)
 
     running = True
     while running:
         try:
-            # Read temperatures from both thermocouples
             tc1 = thermocouple1.get()
             tc2 = thermocouple2.get()
             print(f"Thermocouple 1: {tc1}°F | Thermocouple 2: {tc2}°F", end='\r')
 
-            time.sleep(1)  # Delay between readings
+            time.sleep(1)  
         except MAX6675Error as e:
             print(f"Error: {e.value}")
-            running = False  # Stop the loop if there is an error
-        except KeyboardInterrupt:
-            running = False  # Allow the program to exit on a keyboard interrupt
+            running = False 
 
-    # Cleanup GPIO resources
+    # Cleanup gp resources
     thermocouple1.cleanup()
     thermocouple2.cleanup()

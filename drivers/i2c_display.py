@@ -26,6 +26,25 @@ class MenuItem:
             return [child.name for child in self.children]
         else:
             return None
+
+    def _checkCallable(func):
+        def wrapper(self, arg): 
+            if not callable(arg):
+                raise ValueError(f"{func.__name__} argument must be callable.")
+            return func(self, arc)
+        return wrapper
+
+    @_checkCallable
+    def addAction(self, action):
+        self.action = action 
+
+    @_checkCallable
+    def addOnce(self, once):
+        self.once = once
+
+    @_checkCallable
+    def addUpdate(self, update): 
+        self.update = update @_ 
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu):
         self.lcd = CharLCD(
@@ -157,7 +176,6 @@ def fancyInterpreter(lcd):
         else:
             print("command not recognized")
 
-
 def getIPAddress(self):
     from subprocess import check_output
 
@@ -173,7 +191,6 @@ def buildMenu():
     motorControl = MenuItem("motor control")
     motorCalibrate = MenuItem("calibrate")
     motorCalibrate.addChildren([MenuItem("menu test")])
-    
 
     motorControl.addChildren([MenuItem("motor out"), MenuItem("motor in"), MenuItem("motor home"), motorCalibrate])
 
