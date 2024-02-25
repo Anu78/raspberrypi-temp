@@ -1,4 +1,6 @@
 from RPLCD.i2c import CharLCD
+import time
+import threading
 
 class MenuItem:
     def __init__(self, name, action=None, update=None, parent=None, once=None):
@@ -13,25 +15,37 @@ class MenuItem:
         self.children.extend(children)
     def __str__(self): 
         return f"debug: name={self.name}\n"
-    def getChildren(self):
-        return None if len(self.children) == 0 else self.children
     def getNthChild(self, n): 
         return None if not self.hasChildren() or n > len(self.children) else self.children[n]
     def hasAction(self): 
         return False if self.action is None else True
     def hasChildren(self): 
         return False if len(self.children) == 0 else True
-    def getSubItems(self): 
-        if self.hasChildren():
-            return [child.name for child in self.children]
-        else:
-            return None
+    def executeAction(self):
+        """
+        will include threading and async execution soon
+        """
+        if self.action is not None:
+            self.action()
+
+    # iterator things
+    def __iter__(self): 
+        return self
+    def __next__(self): 
+        numChildren = len(self.children)
+        self.count = 0
+        if self.count > numChildren:
+            raise StopIteration
+        
+        currentChild = self.children[self.count]
+
+        return currentChild.name, currentChild.action, currentChild.update, currentChild.once, currentChild.hasChildren()
 
     def _checkCallable(func):
         def wrapper(self, arg): 
             if not callable(arg):
                 raise ValueError(f"{func.__name__} argument must be callable.")
-            return func(self, arc)
+            return func(self, arg)
         return wrapper
 
     @_checkCallable
@@ -44,7 +58,8 @@ class MenuItem:
 
     @_checkCallable
     def addUpdate(self, update): 
-        self.update = update @_ 
+        self.update = update  
+
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu):
         self.lcd = CharLCD(
@@ -57,6 +72,7 @@ class Display:
         self.inNav = False
         self.rootMenu = rootMenu
         self.currentMenu = rootMenu
+        self.updateActive = False
 
         # create custom chars
         self.registerCustomChars()
@@ -65,17 +81,41 @@ class Display:
         self.drawMenu()
 
     def registerCustomChars(self):
-        chars = [  # smiley, heart, home, back, home(selected), back (selected) 
-            (0b00000, 0b00000, 0b01010, 0b00000, 0b00100, 0b10001, 0b01110, 0b00000),
+        chars = [  # cursor, heart, home, back, home(selected), back (selected), expandArrow 
+            (0b00001, 0b00001, 0b00001, 0b00001, 0b11111, 0b11111, 0b00001, 0b00001),
             (0b00000, 0b01010, 0b11111, 0b11111, 0b01110, 0b00100, 0b00000, 0b00000),
             (0b00100, 0b01110, 0b11111, 0b11011, 0b11011, 0b00000, 0b00000, 0b00000),
             (0b00001, 0b00101, 0b01101, 0b11111, 0b01100, 0b00100, 0b00000, 0b00000),
             (0b00100, 0b01110, 0b11111, 0b11011, 0b11011, 0b00000, 0b11111, 0b11111),
             (0b00001, 0b00101, 0b01101, 0b11111, 0b01100, 0b00100, 0b11111, 0b11111),
+            (0b00000, 0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b01110, 0b00100)
         ]
 
         for i in range(len(chars)):
             self.lcd.create_char(i, chars[i])
+
+    def startUpdating(self): 
+        self.updateActive = True
+        self.updateThread = threading.Thread(target=self.updateContent)
+        self.updateThread.start()
+    def stopUpdating(self):
+        self.updateActive = False
+        if self.updateThread:
+            self.updateThread.join()
+
+    def updateContent(self):
+        """
+        will reduce display re-draw soon by only changing updated text instead of whole menu. 
+        """
+        while self.updateActive:
+            if self.currentMenu.hasChildren():
+                for i, child in enumerate(self.currentMenu.children):
+                    if child.update:
+                        newContent = child.update()
+                        if newContent:
+                            self.lcd.cursor_pos = (i,1)
+                            self.lcd.write_string(newContent[:self.cols+1])
+            time.sleep(1)
 
     def drawNavigation(self):
         icons = ["\x02", "\x03"]
@@ -91,21 +131,29 @@ class Display:
         self.lcd.write_string(icons[1])
 
     def drawMenu(self):
-        toRender = self.currentMenu.getSubItems()
-        if toRender is None:
-            return
-
         self.lcd.clear()
-        for row, item in enumerate(toRender): 
+
+        for row, name, _, update, once, hasChildren in enumerate(self.currentMenu):
             prefix = "\x00" if self.pos == row and not self.inNav else " "
 
-            line = f"{prefix} {item[:self.cols-1]}"
+            line = f"{prefix}{name[:self.cols-1]}"
+            if once is not None: 
+                output = once()
+                if len(line) + len(output) > self.cols + 1: 
+                    print("info: not displaying content due to length.")
+                else: 
+                    line += output
+            if hasChildren: 
+                line += "\x06"
+            
             self.lcd.cursor_pos = (row, 0)
             self.lcd.write_string(line)
-        
+
+        self.startUpdating()
         self.drawNavigation()
 
     def close(self, clear):
+        self.stopUpdating()
         self.lcd.close(clear=clear)
 
     def move(self, new):
@@ -113,7 +161,6 @@ class Display:
             self.navPos = (self.navPos + new) % 2
             self.drawNavigation()
         else:
-            # redraw cursor
             self.lcd.cursor_pos = (self.pos, 0)
             self.lcd.write_string(" ")
             self.pos = (self.pos + new) % (self.rows + 1)
@@ -128,6 +175,8 @@ class Display:
                 self.drawMenu()
             else:
                 self.back()
+        elif self.currentMenu.hasAction(): 
+            self.currentMenu.executeAction()
         else:
             self.forward()
     def forward(self):
@@ -136,12 +185,14 @@ class Display:
             if current.hasChildren():
                 self.currentMenu = current 
                 self.pos = 0
+                self.stopUpdating()
                 self.drawMenu()
     def back(self):
         if self.currentMenu.parent is None:
             return
         else: 
             self.currentMenu = self.currentMenu.parent
+        self.stopUpdating()
         self.drawMenu()
 
     def intoNav(self):
@@ -176,7 +227,7 @@ def fancyInterpreter(lcd):
         else:
             print("command not recognized")
 
-def getIPAddress(self):
+def getIPAddress():
     from subprocess import check_output
 
     ips = check_output(["hostname", "--all-ip-addresses"])
