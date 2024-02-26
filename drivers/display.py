@@ -7,6 +7,8 @@ class MenuItem:
         self.name = name
         self.action = action
         self.update = update
+        self.once = once
+        self.count = 0
         self.parent = parent
         self.children = []
     def addChildren(self, children): 
@@ -31,15 +33,14 @@ class MenuItem:
     # iterator things
     def __iter__(self): 
         return self
-    def __next__(self): 
-        numChildren = len(self.children)
-        self.count = 0
-        if self.count > numChildren:
+    def __next__(self):
+        if self.count < len(self.children):
+            currentChild = self.children[self.count]
+            self.count += 1  
+            return currentChild 
+        else:
+            self.count = 0  
             raise StopIteration
-        
-        currentChild = self.children[self.count]
-
-        return currentChild.name, currentChild.action, currentChild.update, currentChild.once, currentChild.hasChildren()
 
     def _checkCallable(func):
         def wrapper(self, arg): 
@@ -113,9 +114,10 @@ class Display:
                     if child.update:
                         newContent = child.update()
                         if newContent:
-                            self.lcd.cursor_pos = (i,1)
+                            newPos = (i, len(child.name) + 1)
+                            self.lcd.cursor_pos = newPos 
                             self.lcd.write_string(newContent[:self.cols+1])
-            time.sleep(1)
+            time.sleep(2.5)
 
     def drawNavigation(self):
         icons = ["\x02", "\x03"]
@@ -133,17 +135,17 @@ class Display:
     def drawMenu(self):
         self.lcd.clear()
 
-        for row, name, _, update, once, hasChildren in enumerate(self.currentMenu):
+        for row, child in enumerate(self.currentMenu):
             prefix = "\x00" if self.pos == row and not self.inNav else " "
 
-            line = f"{prefix}{name[:self.cols-1]}"
-            if once is not None: 
-                output = once()
+            line = f"{prefix}{child.name[:self.cols-1]}"
+            if child.once is not None: 
+                output = child.once()
                 if len(line) + len(output) > self.cols + 1: 
                     print("info: not displaying content due to length.")
                 else: 
                     line += output
-            if hasChildren: 
+            if child.hasChildren(): 
                 line += "\x06"
             
             self.lcd.cursor_pos = (row, 0)
@@ -152,7 +154,7 @@ class Display:
         self.startUpdating()
         self.drawNavigation()
 
-    def close(self, clear):
+    def cleanup(self, clear):
         self.stopUpdating()
         self.lcd.close(clear=clear)
 
@@ -168,6 +170,7 @@ class Display:
             self.lcd.cursor_pos = (self.pos, 0)
             self.lcd.write_string("\x00")
     def select(self):
+        currentChild = self.currentMenu.getNthChild(self.pos)
         if self.inNav:
             if self.navPos == 0:
                 self.currentMenu = self.rootMenu
@@ -175,8 +178,8 @@ class Display:
                 self.drawMenu()
             else:
                 self.back()
-        elif self.currentMenu.hasAction(): 
-            self.currentMenu.executeAction()
+        elif currentChild.hasAction(): 
+            currentChild.executeAction()
         else:
             self.forward()
     def forward(self):
@@ -201,63 +204,3 @@ class Display:
     def outNav(self):
         self.inNav = False
         self.drawMenu()
-
-
-def fancyInterpreter(lcd):
-    while True:
-        s = input(">> ")
-
-        if s == "bye" or s == "exit":
-            print("bye!")
-            break
-        elif s == "u":
-            lcd.move(-1)
-        elif s == "h":
-            print("h for help | u d l r to m | sel to select | back for back")
-        elif s == "d":
-            lcd.move(1)
-        elif s == "l":
-            lcd.outNav()
-        elif s == "r":
-            lcd.intoNav()
-        elif s == "sel":
-            lcd.select()
-        elif s == "back":
-            lcd.back()
-        else:
-            print("command not recognized")
-
-def getIPAddress():
-    from subprocess import check_output
-
-    ips = check_output(["hostname", "--all-ip-addresses"])
-
-    parsed = ips.decode("utf-8").strip()
-
-    # sometimes this includes the mac address, so filtering:
-    return parsed[parsed.find(" ") :]
-
-def buildMenu(): 
-    rootMenu = MenuItem("main menu")
-    motorControl = MenuItem("motor control")
-    motorCalibrate = MenuItem("calibrate")
-    motorCalibrate.addChildren([MenuItem("menu test")])
-
-    motorControl.addChildren([MenuItem("motor out"), MenuItem("motor in"), MenuItem("motor home"), motorCalibrate])
-
-    preheat = MenuItem("preheat")
-    about = MenuItem("about")
-    connection = MenuItem("connection")
-    connection.addChildren([MenuItem("ip: "), MenuItem("online?")])
-
-    rootMenu.addChildren([motorControl, preheat, about, connection])
-
-    return rootMenu
-
-if __name__ == "__main__":
-    menu = buildMenu()
-    lcd = Display(cols=20, rows=4, i2cAddress=0x27, rootMenu=menu)
-
-    fancyInterpreter(lcd)  # temp interpreter for navigating menu
-
-    lcd.close(clear=False)

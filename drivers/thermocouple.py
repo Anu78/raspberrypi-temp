@@ -2,11 +2,11 @@ import RPi.GPIO as gp
 import time 
 
 class Thermocouple:
-    def __init__(self, name, cs_pin, clock_pin, data_pin, offset=5):
+    def __init__(self, name, chipSelect, clock, data, offset=5):
         self.name = name
-        self.cs_pin = cs_pin
-        self.clock_pin = clock_pin
-        self.data_pin = data_pin
+        self.cs_pin = chipSelect 
+        self.clock_pin = clock
+        self.data_pin = data
         self.offset = offset
 
         self.initialize()
@@ -22,7 +22,7 @@ class Thermocouple:
     def get(self):
         self.read()
         self.checkErrors()
-        return self.to_c(self.data_to_tc_temperature())
+        return str(self.to_c(self.data_to_tc_temperature())) + "C"
 
     def read(self):
         bytesin = 0
