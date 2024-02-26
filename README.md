@@ -21,20 +21,22 @@ This project involves the following parts:
 see __parts.md__ for detailed information on all the parts.
 
 ## Roadmap
-
 A general overview/timeline of what is complete and what needs to be done. 
+
 ### Drivers
-- [ ] lcd display driver (functioning menu, action, update system)
+- [x] lcd display driver (functioning menu, action, update system)
 - [ ] speaker (jukebox and alert noises)
 - [ ] joystick + adc converter  
 - [ ] heater controller (adjustable buck converter)
 - [ ] maintain accurate temperature on heaters (integral) 
-- [ ] thermocouple readers (serial interface)
-- [ ] stepper motor / limit switch
+- [x] thermocouple readers (serial interface)
+- [x] stepper motor / limit switch
+
 ### Webserver / other
 - [ ] SQLite database setup / python driver
 - [ ] Websockets for internal communications and event streaming
 - [ ] react+vite website  
 
-** more will be added in the future when all the drivers are written. **
-## General Information
+** more todos will be added in the future when all the drivers are written. **
+## Documentation
+

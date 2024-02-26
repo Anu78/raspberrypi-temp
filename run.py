@@ -1,11 +1,18 @@
-from flask import Flask, render_template
+import threading
+import time
+from drivers.motor import Stepper
+from drivers.display import Display 
+from drivers.thermocouple import Thermocouple
 
-app = Flask(__name__) 
+"""
+joystick will be constantly polling.
+display only moves when joystick moves 
 
-@app.route('/')
-def index(): 
-    return "file reloading test" 
+websocket needs to be running and active at all time. same with database integrations. 
+"""
 
+def main(): 
+    print("hello world.")
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0") 
+    main()
