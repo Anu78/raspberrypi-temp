@@ -1,22 +1,14 @@
+#!/usr/bin/python3.11
 import time
-import asyncio
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem 
 from drivers.thermocouple import Thermocouple
-from communications.ble import BLEReader
 import websockets
-
-"""
-joystick will be constantly polling.
-display only moves when joystick moves 
-
-websocket needs to be running and active at all time. same with database integrations. 
-"""
-joystick = (None, None) 
 
 def moveMotor(): 
     print("move motor ran")
     stepper.move(3200)
+
 def getIPAddress():
     from subprocess import check_output
 
@@ -26,9 +18,6 @@ def getIPAddress():
 
     # sometimes this includes the mac address, so filtering:
     return parsed[parsed.find(" ") :]
-
-def getThermocoupleTemp(): 
-    return tc.get()
 
 def buildMenu(): 
     rootMenu = MenuItem("main menu")
@@ -61,18 +50,15 @@ def cleanup():
     stepper.cleanup()
     lcd.cleanup(clear=False)
     bleReader.stop()
+    print("safely exiting...")
     exit(0)
-
-def data_changed(newData):
-    global joystick
-    joystick = newData
 
 # globals
 lcd = Display(20, 4, 0x27, buildMenu())
-tc = Thermocouple("main",chipSelect=23, clock=11, data=9)
+tc1 = Thermocouple("main",chipSelect=23, clock=11, data=9)
+tc2 = Thermocouple("main",chipSelect=23, clock=11, data=9)
+tc1_precise = Thermocouple("main",chipSelect=23, clock=11, data=9, model="max31856")
 stepper = Stepper(pul=17, dir=27, stepsPerRevolution=3200)
-bleReader = BLEReader(address="EC:62:60:82:94:0E", char_uuid="00002a58-0000-1000-8000-00805f9b34fb", data_changed_callback=data_changed) 
-bleReader.start() 
 
 async def loop():
     try:
@@ -106,5 +92,4 @@ async def loop():
 
 if __name__ == "__main__":
     print("program started")
-    print("starting bluetooth connection")
-    asyncio.run(loop())
+    loop()
