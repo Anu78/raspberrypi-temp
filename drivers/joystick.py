@@ -3,17 +3,14 @@ import time
 from drivers.utils import map_range
 from drivers.switch import Switch
 
-adc = ADS1x15.ADS1115(busId=1)  # Adjust busId based on your SBC
-
-valueA0 = adc.readADC(0)
-voltageA0 = adc.toVoltage(valueA0)
-
-valueA1 = adc.readADC(1)
-voltageA1 = adc.toVoltage(valueA1)
-
 class JoystickReader():
-  def __init__(self, switch_pin, threshold=3, debounce_period=0.5, input_read_delay=0.2): 
-    self.adc = ADS1x15.ADS1115(1) # default i2c address
+  def __init__(self, switch_pin, threshold=4, debounce_period=0.4, input_read_delay=0.2): 
+    self.adc = ADS1x15.ADS1115(1, 0x48) # default i2c address
+    self.adc.setGain(self.adc.PGA_4_096V)
+    self.adc.setDataRate(self.adc.DR_ADS111X_128)
+    self.adc.setMode(self.adc.MODE_CONTINUOUS)
+    self.adc.requestADC(0) 
+    time.sleep(0.5)
     self.fns = {"up": None, "down": None, "left": None, "right": None, "click": None} 
     self.threshold = threshold
     self.input_read_delay = input_read_delay
@@ -30,7 +27,6 @@ class JoystickReader():
       while True:  # values between 0 and 32767
           a0 = map_range(self.adc.readADC(0), 0, 32767, 0, 100)
           a1 = map_range(self.adc.readADC(1), 0, 32767, 0, 100)
-
           dev_a0 = abs(a0 - 60)
           dev_a1 = abs(a1 - 60)
 
