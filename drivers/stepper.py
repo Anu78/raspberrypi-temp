@@ -38,3 +38,7 @@ class Stepper:
     def cleanup(self): 
         gp.setup(self.dir, gp.IN)
         gp.setup(self.pul, gp.IN)
+
+if __name__ == "__main__":
+    stepper = Stepper(17, 27, 3200)
+    stepper.move(3200*5)

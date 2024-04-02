@@ -3,7 +3,7 @@ import time
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem 
 from drivers.thermocouple import Thermocouple
-import websockets
+from drivers.joystick import JoystickReader
 
 def moveMotor(): 
     print("move motor ran")
@@ -16,73 +16,76 @@ def getIPAddress():
 
     parsed = ips.decode("utf-8").strip()
 
-    # sometimes this includes the mac address, so filtering:
     return parsed[parsed.find(" ") :]
 
+def getLeftTemp():
+    return tcLeft.get()
+def getRightTemp():
+    return tcRight.get()
 def buildMenu(): 
     rootMenu = MenuItem("main menu")
     motorControl = MenuItem("motor control")
-    motorCalibrate = MenuItem("calibrate")
-    motorCalibrate.addChildren([MenuItem("menu test")])
 
-    motorControl.addChildren([MenuItem("motor out", action=moveMotor), MenuItem("motor in"), MenuItem("motor home"), motorCalibrate])
+    motorControl + MenuItem("motor out", action=moveMotor) 
+    motorControl + MenuItem("motor in")
+    motorControl + MenuItem("motor home")
 
     preheat = MenuItem("preheat")
-    preheat.addChildren([
-        MenuItem("temp 1:", update=getThermocoupleTemp)
-        ])
+    preheat + MenuItem("temp 1:", update=getLeftTemp)
+    preheat + MenuItem("tenp 2:", update=getRightTemp)
 
     about = MenuItem("about")
-    about.addChildren([
-        MenuItem("sd 2023-24"), MenuItem("code:"), MenuItem("todo")
-        ])
+    about + MenuItem("sd 2023-24")
+    about + MenuItem("code:")
+    about + MenuItem("todo")
 
     connection = MenuItem("connection")
-    connection.addChildren([MenuItem("ip: ", once=getIPAddress), MenuItem("online?")])
+    connection + MenuItem("ip: ", once=getIPAddress) 
+    connection + MenuItem("online?")
 
-    rootMenu.addChildren([motorControl, preheat, about, connection])
+    rootMenu + motorControl
+    rootMenu + preheat
+    rootMenu + about
+    rootMenu + connection
 
     return rootMenu
 
 def cleanup(): 
     print("\n interrupted by user. cleaning up")
-    tc.cleanup()
+    tcLeft.cleanup()
+    tcRight.cleanup()
     stepper.cleanup()
     lcd.cleanup(clear=False)
-    bleReader.stop()
     print("safely exiting...")
     exit(0)
 
 # globals
 lcd = Display(20, 4, 0x27, buildMenu())
-tc1 = Thermocouple("main",chipSelect=23, clock=11, data=9)
-tc2 = Thermocouple("main",chipSelect=23, clock=11, data=9)
-tc1_precise = Thermocouple("main",chipSelect=23, clock=11, data=9, model="max31856")
+tcLeft = Thermocouple("left plate",chipSelect=23, clock=11, data=9)
+tcRight = Thermocouple("right plate",chipSelect=24, clock=11, data=9)
 stepper = Stepper(pul=17, dir=27, stepsPerRevolution=3200)
+joystick = JoystickReader(switch_pin=26)
 
-async def loop():
+def moveUp():
+    lcd.move(-1)
+def moveDown():
+    lcd.move(1)
+def moveLeft():
+    lcd.outNav()
+def moveRight():
+    lcd.intoNav()
+def click():
+    lcd.select()
+
+joystick.assignAction("up", moveUp)
+joystick.assignAction("down", moveDown)
+joystick.assignAction("left", moveLeft)
+joystick.assignAction("right", moveRight)
+joystick.assignAction("click", click)
+
+def loop():
     try:
-        while True:
-            if joystick[0] is None or joystick[1] == None:
-                continue
-            print(joystick)
-            match joystick[0]: 
-                case 1:
-                    print("left")
-                    lcd.outNav()
-                case 2:
-                    print("up")
-                    lcd.move(-1)
-                case 3:
-                    print("right")
-                    lcd.intoNav()
-                case 4:
-                    print("down")
-                    lcd.move(1)
-            if joystick[1] == 1:
-                lcd.select()
-            asyncio.sleep(2)
-            
+        joystick.read() 
     except KeyboardInterrupt:
         print("\ninterrupted by user. cleaning up...")
         cleanup()

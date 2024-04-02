@@ -3,63 +3,58 @@ import time
 import threading
 
 class MenuItem:
-    def __init__(self, name, action=None, update=None, parent=None, once=None):
+    def __init__(self, name, action=None, update=None, once=None):
         self.name = name
-        self.action = action
-        self.update = update
-        self.once = once
         self.count = 0
-        self.parent = parent
+        self.parent = None 
         self.children = []
-    def addChildren(self, children): 
-        for child in children: 
-            child.parent = self
-        self.children.extend(children)
-    def __str__(self): 
+        self.setAction(action)
+        self.setUpdate(update)
+        self.setOnce(once)
+
+    def __add__(self, child): 
+        if not isinstance(child, MenuItem):
+            raise TypeError("Child must be a MenuItem.")
+        child.parent = self
+        self.children.append(child) 
+
+    def __repr__(self): 
         return f"debug: name={self.name}\n"
+
     def getNthChild(self, n): 
-        return None if not self.hasChildren() or n > len(self.children) else self.children[n]
+        return None if not self.hasChildren() or n >= len(self.children) else self.children[n]
+
     def hasAction(self): 
-        return False if self.action is None else True
+        return self.action is not None
+
     def hasChildren(self): 
-        return False if len(self.children) == 0 else True
+        return len(self.children) > 0
+
     def executeAction(self):
-        """
-        will include threading and async execution soon
-        """
-        if self.action is not None:
+        if self.hasAction():
             self.action()
 
-    # iterator things
     def __iter__(self): 
-        return self
-    def __next__(self):
-        if self.count < len(self.children):
-            currentChild = self.children[self.count]
-            self.count += 1  
-            return currentChild 
-        else:
-            self.count = 0  
-            raise StopIteration
+        return iter(self.children)
 
     def _checkCallable(func):
         def wrapper(self, arg): 
-            if not callable(arg):
-                raise ValueError(f"{func.__name__} argument must be callable.")
+            if arg is not None and not callable(arg):
+                raise ValueError(f"The provided argument for {func.__name__[3:]} must be callable.")
             return func(self, arg)
         return wrapper
 
     @_checkCallable
-    def addAction(self, action):
+    def setAction(self, action):
         self.action = action 
 
     @_checkCallable
-    def addOnce(self, once):
-        self.once = once
+    def setUpdate(self, update):
+        self.update = update
 
     @_checkCallable
-    def addUpdate(self, update): 
-        self.update = update  
+    def setOnce(self, once):
+        self.once = once
 
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu):
@@ -68,17 +63,15 @@ class Display:
         )
         self.cols = cols - 1
         self.rows = rows - 1
-        self.pos = 0  # row number
+        self.pos = 0  
         self.navPos = 0
         self.inNav = False
         self.rootMenu = rootMenu
         self.currentMenu = rootMenu
         self.updateActive = False
 
-        # create custom chars
         self.registerCustomChars()
 
-        # draw the root menu and navigation
         self.drawMenu()
 
     def registerCustomChars(self):
