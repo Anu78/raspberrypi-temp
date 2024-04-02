@@ -1,4 +1,3 @@
-#!/usr/bin/python3.11
 import time
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem 

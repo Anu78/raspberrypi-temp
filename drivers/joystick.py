@@ -27,8 +27,8 @@ class JoystickReader():
       while True:  # values between 0 and 32767
           a0 = map_range(self.adc.readADC(0), 0, 32767, 0, 100)
           a1 = map_range(self.adc.readADC(1), 0, 32767, 0, 100)
-          dev_a0 = abs(a0 - 60)
-          dev_a1 = abs(a1 - 60)
+          dev_a0 = abs(a0 - 63)
+          dev_a1 = abs(a1 - 63)
 
           current_time = time.time()
 

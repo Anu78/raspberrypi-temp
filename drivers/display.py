@@ -1,6 +1,5 @@
 from RPLCD.i2c import CharLCD
-import time
-import threading
+import time, threading
 
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None):
@@ -11,7 +10,7 @@ class MenuItem:
         self.setAction(action)
         self.setUpdate(update)
         self.setOnce(once)
-
+    
     def __add__(self, child): 
         if not isinstance(child, MenuItem):
             raise TypeError("Child must be a MenuItem.")
@@ -69,6 +68,9 @@ class Display:
         self.rootMenu = rootMenu
         self.currentMenu = rootMenu
         self.updateActive = False
+        self.scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
+        self.lock = threading.Lock()  # Protect shared resources
+        self.scheduler_thread.start()
 
         self.registerCustomChars()
 
@@ -88,29 +90,21 @@ class Display:
         for i in range(len(chars)):
             self.lcd.create_char(i, chars[i])
 
-    def startUpdating(self): 
-        self.updateActive = True
-        self.updateThread = threading.Thread(target=self.updateContent)
-        self.updateThread.start()
-    def stopUpdating(self):
-        self.updateActive = False
-        if self.updateThread:
-            self.updateThread.join()
+    def run_scheduler(self):
+        while True: 
+            for row, child in enumerate(self.currentMenu):
+                if child.update is not None: 
+                    content = child.update() 
+                    self.updateItem(row, content) 
+            time.sleep(1)
 
-    def updateContent(self):
-        """
-        will reduce display re-draw soon by only changing updated text instead of whole menu. 
-        """
-        while self.updateActive:
-            if self.currentMenu.hasChildren():
-                for i, child in enumerate(self.currentMenu.children):
-                    if child.update:
-                        newContent = child.update()
-                        if newContent:
-                            newPos = (i, len(child.name) + 1)
-                            self.lcd.cursor_pos = newPos 
-                            self.lcd.write_string(newContent[:self.cols+1])
-            time.sleep(2.5)
+    def updateItem(self, row, content): 
+        with self.lock:
+            prefix = "\x00" if self.pos == row and not self.inNav else " "
+            line = f"{prefix}{content[:self.cols-1]}"
+
+            self.lcd.cursor_pos = (row, 0)
+            self.lcd.write_string(line)
 
     def drawNavigation(self):
         icons = ["\x02", "\x03"]
@@ -144,11 +138,9 @@ class Display:
             self.lcd.cursor_pos = (row, 0)
             self.lcd.write_string(line)
 
-        self.startUpdating()
         self.drawNavigation()
 
     def cleanup(self, clear):
-        self.stopUpdating()
         self.lcd.close(clear=clear)
 
     def move(self, new):
@@ -181,14 +173,12 @@ class Display:
             if current.hasChildren():
                 self.currentMenu = current 
                 self.pos = 0
-                self.stopUpdating()
                 self.drawMenu()
     def back(self):
         if self.currentMenu.parent is None:
             return
         else: 
             self.currentMenu = self.currentMenu.parent
-        self.stopUpdating()
         self.drawMenu()
 
     def intoNav(self):
