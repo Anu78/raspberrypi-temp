@@ -1,42 +1,30 @@
-# Rewarming and Vitrifying Organoids 
+# React + TypeScript + Vite
 
-This is the respository for my 2023-2024 senior design project. This code is intended to run on a raspberry pi. See the roadmap for future plans, parts required, and other general information. 
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## What's in this repository
-This repository, by the end of May 2024, will contain the following: 
-1. 3d models and schematics of our device 
-2. Electrical wiring diagrams 
-3. All the source code (drivers for all the components and the web server)
-4. Detailed documentation of the source code and architecture of the application. 
+Currently, two official plugins are available:
 
-The goal is to ensure that anyone that works on this device in the future will be able to pick up where I left off and continue improving and iterating over the design. 
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Required parts 
-This project involves the following parts: 
-1. Two silicone rubber flex heaters
-2. A stepper motor & a limit switch
-3. A joystick (and thus an analog to digital converter)
-4. 3 thermocouple readers (MAX6675 in this case, but there might be a switch to a more accurate module later)
+## Expanding the ESLint configuration
 
-see __parts.md__ for detailed information on all the parts.
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-## Roadmap
-A general overview/timeline of what is complete and what needs to be done. 
+- Configure the top-level `parserOptions` property like this:
 
-### Drivers
-- [x] lcd display driver (functioning menu, action, update system)
-- [ ] speaker (jukebox and alert noises)
-- [ ] joystick + adc converter  
-- [ ] heater controller (adjustable buck converter)
-- [ ] maintain accurate temperature on heaters (integral) 
-- [x] thermocouple readers (serial interface)
-- [x] stepper motor / limit switch
+```js
+export default {
+  // other rules...
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+}
+```
 
-### Webserver / other
-- [ ] SQLite database setup / python driver
-- [ ] Websockets for internal communications and event streaming
-- [ ] react+vite website  
-
-** more todos will be added in the future when all the drivers are written. **
-## Documentation
-
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
