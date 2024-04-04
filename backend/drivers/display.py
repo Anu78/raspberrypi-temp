@@ -1,51 +1,59 @@
 from RPLCD.i2c import CharLCD
 import time, threading
 
+
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None):
         self.name = name
         self.count = 0
-        self.parent = None 
+        self.parent = None
         self.children = []
         self.setAction(action)
         self.setUpdate(update)
         self.setOnce(once)
-    
-    def __add__(self, child): 
+
+    def __add__(self, child):
         if not isinstance(child, MenuItem):
             raise TypeError("Child must be a MenuItem.")
         child.parent = self
-        self.children.append(child) 
+        self.children.append(child)
 
-    def __repr__(self): 
+    def __repr__(self):
         return f"debug: name={self.name}\n"
 
-    def getNthChild(self, n): 
-        return None if not self.hasChildren() or n >= len(self.children) else self.children[n]
+    def getNthChild(self, n):
+        return (
+            None
+            if not self.hasChildren() or n >= len(self.children)
+            else self.children[n]
+        )
 
-    def hasAction(self): 
+    def hasAction(self):
         return self.action is not None
 
-    def hasChildren(self): 
+    def hasChildren(self):
         return len(self.children) > 0
 
     def executeAction(self):
         if self.hasAction():
             self.action()
 
-    def __iter__(self): 
+    def __iter__(self):
         return iter(self.children)
 
     def _checkCallable(func):
-        def wrapper(self, arg): 
+        def wrapper(self, arg):
             if arg is not None and not callable(arg):
-                raise ValueError(f"The provided argument for {func.__name__[3:]} must be callable.")
+                raise ValueError(
+                    f"The provided argument for {func.__name__[3:]} must be callable."
+                )
             return func(self, arg)
+
         return wrapper
 
     @_checkCallable
     def setAction(self, action):
-        self.action = action 
+        self.action = action
 
     @_checkCallable
     def setUpdate(self, update):
@@ -55,6 +63,7 @@ class MenuItem:
     def setOnce(self, once):
         self.once = once
 
+
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu):
         self.lcd = CharLCD(
@@ -62,14 +71,14 @@ class Display:
         )
         self.cols = cols - 1
         self.rows = rows - 1
-        self.pos = 0  
+        self.pos = 0
         self.navPos = 0
         self.inNav = False
         self.rootMenu = rootMenu
         self.currentMenu = rootMenu
         self.updateActive = False
         self.scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
-        self.lock = threading.Lock()  
+        self.lock = threading.Lock()
         self.scheduler_thread.start()
 
         self.registerCustomChars()
@@ -77,28 +86,93 @@ class Display:
         self.drawMenu()
 
     def registerCustomChars(self):
-        chars = [  # cursor, heart, home, back, home(selected), back (selected), expandArrow 
-            (0b00001, 0b00001, 0b00001, 0b00001, 0b11111, 0b11111, 0b00001, 0b00001),
-            (0b00000, 0b01010, 0b11111, 0b11111, 0b01110, 0b00100, 0b00000, 0b00000),
-            (0b00100, 0b01110, 0b11111, 0b11011, 0b11011, 0b00000, 0b00000, 0b00000),
-            (0b00001, 0b00101, 0b01101, 0b11111, 0b01100, 0b00100, 0b00000, 0b00000),
-            (0b00100, 0b01110, 0b11111, 0b11011, 0b11011, 0b00000, 0b11111, 0b11111),
-            (0b00001, 0b00101, 0b01101, 0b11111, 0b01100, 0b00100, 0b11111, 0b11111),
-            (0b00000, 0b00000, 0b00000, 0b00000, 0b10001, 0b11011, 0b01110, 0b00100)
-        ]
+        chars = (
+            [  # cursor, heart, home, back, home(selected), back (selected), expandArrow
+                (
+                    0b00001,
+                    0b00001,
+                    0b00001,
+                    0b00001,
+                    0b11111,
+                    0b11111,
+                    0b00001,
+                    0b00001,
+                ),
+                (
+                    0b00000,
+                    0b01010,
+                    0b11111,
+                    0b11111,
+                    0b01110,
+                    0b00100,
+                    0b00000,
+                    0b00000,
+                ),
+                (
+                    0b00100,
+                    0b01110,
+                    0b11111,
+                    0b11011,
+                    0b11011,
+                    0b00000,
+                    0b00000,
+                    0b00000,
+                ),
+                (
+                    0b00001,
+                    0b00101,
+                    0b01101,
+                    0b11111,
+                    0b01100,
+                    0b00100,
+                    0b00000,
+                    0b00000,
+                ),
+                (
+                    0b00100,
+                    0b01110,
+                    0b11111,
+                    0b11011,
+                    0b11011,
+                    0b00000,
+                    0b11111,
+                    0b11111,
+                ),
+                (
+                    0b00001,
+                    0b00101,
+                    0b01101,
+                    0b11111,
+                    0b01100,
+                    0b00100,
+                    0b11111,
+                    0b11111,
+                ),
+                (
+                    0b00000,
+                    0b00000,
+                    0b00000,
+                    0b00000,
+                    0b10001,
+                    0b11011,
+                    0b01110,
+                    0b00100,
+                ),
+            ]
+        )
 
         for i in range(len(chars)):
             self.lcd.create_char(i, chars[i])
 
     def run_scheduler(self):
-        while True: 
+        while True:
             for row, child in enumerate(self.currentMenu):
-                if child.update is not None: 
-                    content = child.update() 
-                    self.updateItem(row, content) 
+                if child.update is not None:
+                    content = child.update()
+                    self.updateItem(row, content)
             time.sleep(1)
 
-    def updateItem(self, row, content): 
+    def updateItem(self, row, content):
         with self.lock:
             prefix = "\x00" if self.pos == row and not self.inNav else " "
             line = f"{prefix}{content[:self.cols-1]}"
@@ -111,12 +185,12 @@ class Display:
         if self.inNav:
             if self.navPos == 0:
                 icons[0] = "\x04"
-            else: 
-                icons[1] = "\x05" 
+            else:
+                icons[1] = "\x05"
 
-        self.lcd.cursor_pos = (0, self.cols) # home button 
+        self.lcd.cursor_pos = (0, self.cols)  # home button
         self.lcd.write_string(icons[0])
-        self.lcd.cursor_pos = (self.rows, self.cols) # draw back button 
+        self.lcd.cursor_pos = (self.rows, self.cols)  # draw back button
         self.lcd.write_string(icons[1])
 
     def drawMenu(self):
@@ -126,15 +200,15 @@ class Display:
             prefix = "\x00" if self.pos == row and not self.inNav else " "
 
             line = f"{prefix}{child.name[:self.cols-1]}"
-            if child.once is not None: 
+            if child.once is not None:
                 output = child.once()
-                if len(line) + len(output) > self.cols + 1: 
+                if len(line) + len(output) > self.cols + 1:
                     print("info: not displaying content due to length.")
-                else: 
+                else:
                     line += output
-            if child.hasChildren(): 
+            if child.hasChildren():
                 line += "\x06"
-            
+
             self.lcd.cursor_pos = (row, 0)
             self.lcd.write_string(line)
 
@@ -154,6 +228,7 @@ class Display:
 
             self.lcd.cursor_pos = (self.pos, 0)
             self.lcd.write_string("\x00")
+
     def select(self):
         currentChild = self.currentMenu.getNthChild(self.pos)
         if self.inNav:
@@ -163,27 +238,30 @@ class Display:
                 self.drawMenu()
             else:
                 self.back()
-        elif currentChild.hasAction(): 
+        elif currentChild.hasAction():
             currentChild.executeAction()
         else:
             self.forward()
+
     def forward(self):
         current = self.currentMenu.getNthChild(self.pos)
-        if current is not None: 
+        if current is not None:
             if current.hasChildren():
-                self.currentMenu = current 
+                self.currentMenu = current
                 self.pos = 0
                 self.drawMenu()
+
     def back(self):
         if self.currentMenu.parent is None:
             return
-        else: 
+        else:
             self.currentMenu = self.currentMenu.parent
         self.drawMenu()
 
     def intoNav(self):
         self.inNav = True
         self.drawMenu()
+
     def outNav(self):
         self.inNav = False
         self.drawMenu()
