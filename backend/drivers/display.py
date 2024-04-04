@@ -69,7 +69,7 @@ class Display:
         self.currentMenu = rootMenu
         self.updateActive = False
         self.scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
-        self.lock = threading.Lock()  # Protect shared resources
+        self.lock = threading.Lock()  
         self.scheduler_thread.start()
 
         self.registerCustomChars()
