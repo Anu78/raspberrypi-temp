@@ -50,5 +50,5 @@ class Stepper:
 
 
 if __name__ == "__main__":
-    stepper = Stepper(17, 27, 3200)
-    stepper.move(3200 * 5)
+    stepper = Stepper(19, 26, 3200)
+    stepper.move(3200)

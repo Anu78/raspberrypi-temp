@@ -6,7 +6,7 @@ from drivers.switch import Switch
 
 class JoystickReader:
     def __init__(
-        self, switch_pin, threshold=4, debounce_period=0.4, input_read_delay=0.2
+        self, switch_pin, threshold=4, debounce_period=0.4, input_read_delay=0.2, center=65
     ):
         self.adc = ADS1x15.ADS1115(1, 0x48)  # default i2c address
         self.adc.setGain(self.adc.PGA_4_096V)
@@ -25,7 +25,7 @@ class JoystickReader:
         self.input_read_delay = input_read_delay
         self.debounce_period = debounce_period
         self.switch = Switch(switch_pin)
-
+        self.center = center
     def read(self):
         for label, fn in self.fns.items():
             if fn is None:
@@ -36,17 +36,17 @@ class JoystickReader:
         while True:  # values between 0 and 32767
             a0 = map_range(self.adc.readADC(0), 0, 32767, 0, 100)
             a1 = map_range(self.adc.readADC(1), 0, 32767, 0, 100)
-            dev_a0 = abs(a0 - 63)
-            dev_a1 = abs(a1 - 63)
+            dev_a0 = abs(a0 - self.center)
+            dev_a1 = abs(a1 - self.center)
 
             current_time = time.time()
 
             direction = None
             if max(dev_a0, dev_a1) > self.threshold:
                 if dev_a0 > dev_a1:
-                    direction = "left" if a0 < 60 else "right"
+                    direction = "left" if a0 < self.center else "right"
                 else:
-                    direction = "up" if a1 < 60 else "down"
+                    direction = "up" if a1 < self.center else "down"
 
             if direction and (current_time - last_trigger_time > self.debounce_period):
                 self.fns[direction]()

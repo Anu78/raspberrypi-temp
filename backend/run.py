@@ -1,3 +1,4 @@
+#!env/bin/python3
 import time
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem 
@@ -60,10 +61,10 @@ def cleanup():
 
 # globals
 lcd = Display(20, 4, 0x27, buildMenu())
-tcLeft = Thermocouple("left plate",chipSelect=23, clock=11, data=9)
-tcRight = Thermocouple("right plate",chipSelect=24, clock=11, data=9)
-stepper = Stepper(pul=17, dir=27, stepsPerRevolution=3200)
-joystick = JoystickReader(switch_pin=26)
+tcLeft = Thermocouple("left plate",chipSelect=7, clock=11, data=9)
+tcRight = Thermocouple("right plate",chipSelect=8, clock=11, data=9)
+stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200)
+joystick = JoystickReader(switch_pin=18)
 
 def moveUp():
     lcd.move(-1)
