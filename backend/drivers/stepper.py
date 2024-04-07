@@ -1,13 +1,10 @@
 import RPi.GPIO as gp
 import time
 
-
 class Stepper:
     def __init__(
-        self, pul, dir, stepsPerRevolution, delay=1e-4, direction="f", enable=None
-    ):
+        self, pul, dir, stepsPerRevolution, delay=1e-4, direction="f"):
         self.direction = direction
-        self.enable = enable
         self.pul = pul
         self.dir = dir
         self.stepsPerRevolution = stepsPerRevolution
@@ -50,5 +47,5 @@ class Stepper:
 
 
 if __name__ == "__main__":
-    stepper = Stepper(19, 26, 3200)
+    stepper = Stepper(17, 27, 3200)
     stepper.move(3200)

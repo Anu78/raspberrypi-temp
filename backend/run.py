@@ -6,7 +6,6 @@ from drivers.thermocouple import Thermocouple
 from drivers.joystick import JoystickReader
 
 def moveMotor(): 
-    print("move motor ran")
     stepper.move(3200)
 
 def getIPAddress():
@@ -16,7 +15,7 @@ def getIPAddress():
 
     parsed = ips.decode("utf-8").strip()
 
-    return parsed[parsed.find(" ") :]
+    return parsed
 
 def getLeftTemp():
     return tcLeft.get()

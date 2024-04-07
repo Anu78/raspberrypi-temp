@@ -1,7 +1,6 @@
 from RPLCD.i2c import CharLCD
 import time, threading
 
-
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None):
         self.name = name
@@ -169,15 +168,19 @@ class Display:
             for row, child in enumerate(self.currentMenu):
                 if child.update is not None:
                     content = child.update()
-                    self.updateItem(row, content)
-            time.sleep(1)
+                    header = child.name
+                    if len(header) + len(content) > 20: 
+                        print("info: skipping update. content is too long.")
+                        continue
+                    self.updateItem(row, content, col_pos=len(header))
+            time.sleep(1.5)
 
-    def updateItem(self, row, content):
+    def updateItem(self, row, content, col_pos=0):
         with self.lock:
             prefix = "\x00" if self.pos == row and not self.inNav else " "
             line = f"{prefix}{content[:self.cols-1]}"
 
-            self.lcd.cursor_pos = (row, 0)
+            self.lcd.cursor_pos = (row, col_pos)
             self.lcd.write_string(line)
 
     def drawNavigation(self):
