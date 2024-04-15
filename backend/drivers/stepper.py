@@ -40,7 +40,6 @@ class Stepper:
             self.move(20) # adjust later based on switch precision
 
     def calibrate(self, inc=20): 
-        self.home() 
         self.move(inc)
         self.stepsToCompress += 20
 
