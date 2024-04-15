@@ -4,50 +4,44 @@ from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem
 from drivers.thermocouple import Thermocouple
 from drivers.joystick import JoystickReader
-from  _logging.logging import Logger
+from _logging.logging import Logger
 
 
 def moveMotor():
     stepper.move(3200)
-
-
-def getIPAddress():
-    from subprocess import check_output
-
-    ips = check_output(["hostname", "--all-ip-addresses"])
-
-    parsed = ips.decode("utf-8").strip()
-
-    return parsed
-
-
 def getLeftTemp():
     return tcLeft.get()
-
-
 def getRightTemp():
     return tcRight.get()
-
 
 def buildMenu():
     rootMenu = MenuItem("main menu")
     motorControl = MenuItem("motor control")
 
-    motorControl + MenuItem("motor out", action=moveMotor)
-    motorControl + MenuItem("motor in")
-    motorControl + MenuItem("motor home")
+    motorControl + MenuItem("move apart", action=moveMotor)
+    motorControl + MenuItem("move in")
+    motorControl + MenuItem("home")
+    calibrate = MenuItem("calibrate")
+    calibrate + MenuItem("move in") 
+    calibrate + MenuItem("move out")
+    calibrate + MenuItem("cur steps:", update=None)
+    calibrate + MenuItem("set compressed", action=None)
+
+    motorControl + calibrate 
 
     preheat = MenuItem("preheat")
-    preheat + MenuItem("temp 1:", update=getLeftTemp)
-    preheat + MenuItem("tenp 2:", update=getRightTemp)
+    preheat + MenuItem("lplate:", update=getLeftTemp)
+    preheat + MenuItem("rplate:", update=getRightTemp)
+    preheat + MenuItem("start preheating")
+    preheat + MenuItem("stop preheating")
 
     about = MenuItem("about")
     about + MenuItem("sd 2023-24")
-    about + MenuItem("code:")
-    about + MenuItem("todo")
+    about + MenuItem("code: git - anu78/sd23-24")
+    about + MenuItem("play a game")
 
     connection = MenuItem("connection")
-    connection + MenuItem("ip: ", once=getIPAddress)
+    connection + MenuItem("ip: ", once=None)
     connection + MenuItem("online?")
 
     rootMenu + motorControl

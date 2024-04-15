@@ -161,8 +161,8 @@ class Display:
             ]
         )
 
-        for i in range(len(chars)):
-            self.lcd.create_char(i, chars[i])
+        for i, ch in enumerate(chars):
+            self.lcd.create_char(i,ch)
 
     def run_scheduler(self):
         while True:
