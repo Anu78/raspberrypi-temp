@@ -1,10 +1,18 @@
 import time
 import random
 
+class Point:
+  def __init__(self,x,y):
+    self.x = x
+    self.y = y
+  def __eq__(self, other):
+    return True if self.x == other.x and self.y == other.y else False
+  def __repr__(self):
+    return f"{self.x},{self.y}"
+
 class LinkedList:
-  def __init__(self, x, y, direction): 
-    self.x = x 
-    self.y = y 
+  def __init__(self, pos, direction): 
+    self.pos = pos 
     self.direction = direction 
     self.next = None
 
@@ -12,7 +20,7 @@ class LinkedList:
   def __repr__(self):
     ret = ""
     for node in self:
-      ret += f"{node.x},{node.y}->"
+      ret += f"{node.pos}->"
     return ret[:-3] 
   
   def __iter__(self):
@@ -30,14 +38,18 @@ class Snake:
     self.initialize()
     self.registerNewChars()
   def initialize(self):
-    self.head = LinkedList(x=10, y=2, direction=3)
+    self.head = LinkedList(Point(10,2), direction=3)
     temp = self.head
     # add 2 starting nodes
     for i in range(1,4): 
-      temp.next = LinkedList(x=10+i, y=2, direction=3)
+      temp.next = LinkedList(Point(10+i, 2), direction=3)
       temp = temp.next  
   def spawnFood(self): 
-    self.food_pos = (random.randint(0,19), random.randint(0,3))
+    self.food_pos = Point(random.randint(0,19), random.randint(0,3))
+    for node in self.head:
+      if node.pos == self.head.pos:
+        self.spawnFood()
+
   def foodEaten(self): 
     self.head.next = LinkedList(position=()) 
     self.spawnFood()
@@ -83,11 +95,11 @@ class Snake:
   def draw(self):
     # draw body
     for i, node in enumerate(self.head):
-      self.lcd.cursor_pos = (node.y, node.x)
+      self.lcd.cursor_pos = (node.pos.y, node.pos.x)
       self.lcd.write_string("\x01" if i != 0 else "\x00") 
 
     # draw food
-    self.lcd.cursor_pos = (self.food_pos[0], self.food_pos[1])
+    self.lcd.cursor_pos = (node.pos.y, node.pos.x)
     self.lcd.write_string("\x02")
 
   def drawCountdown(self):
