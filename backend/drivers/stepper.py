@@ -2,16 +2,18 @@ import RPi.GPIO as gp
 import time
 from drivers.switch import Switch
 
+
 class Stepper:
     def __init__(
-        self, pul, dir, stepsPerRevolution, limit_switch_pin, delay=1e-4, direction="f"):
+        self, pul, dir, stepsPerRevolution, limit_switch_pin, delay=1e-4, direction="f"
+    ):
         self.direction = direction
         self.pul = pul
         self.dir = dir
         self.stepsPerRevolution = stepsPerRevolution
         self.delay = delay
         self.limit_switch = Switch("motor limit", limit_switch_pin)
-        self.stepsToCompress = 0 # find real value later
+        self.stepsToCompress = 0  # find real value later
 
         self.initialize()
 
@@ -37,9 +39,9 @@ class Stepper:
 
     def home(self):
         while not self.limit_switch.is_depressed():
-            self.move(20) # adjust later based on switch precision
+            self.move(20)  # adjust later based on switch precision
 
-    def calibrate(self, inc=20): 
+    def calibrate(self, inc=20):
         self.move(inc)
         self.stepsToCompress += 20
 

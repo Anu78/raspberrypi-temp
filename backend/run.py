@@ -1,12 +1,14 @@
 #!env/bin/python3
 import time
 from drivers.stepper import Stepper
-from drivers.display import Display, MenuItem 
+from drivers.display import Display, MenuItem
 from drivers.thermocouple import Thermocouple
 from drivers.joystick import JoystickReader
 
-def moveMotor(): 
+
+def moveMotor():
     stepper.move(3200)
+
 
 def getIPAddress():
     from subprocess import check_output
@@ -17,15 +19,20 @@ def getIPAddress():
 
     return parsed
 
+
 def getLeftTemp():
     return tcLeft.get()
+
+
 def getRightTemp():
     return tcRight.get()
-def buildMenu(): 
+
+
+def buildMenu():
     rootMenu = MenuItem("main menu")
     motorControl = MenuItem("motor control")
 
-    motorControl + MenuItem("motor out", action=moveMotor) 
+    motorControl + MenuItem("motor out", action=moveMotor)
     motorControl + MenuItem("motor in")
     motorControl + MenuItem("motor home")
 
@@ -39,7 +46,7 @@ def buildMenu():
     about + MenuItem("todo")
 
     connection = MenuItem("connection")
-    connection + MenuItem("ip: ", once=getIPAddress) 
+    connection + MenuItem("ip: ", once=getIPAddress)
     connection + MenuItem("online?")
 
     rootMenu + motorControl
@@ -49,7 +56,8 @@ def buildMenu():
 
     return rootMenu
 
-def cleanup(): 
+
+def cleanup():
     print("\n interrupted by user. cleaning up")
     tcLeft.cleanup()
     tcRight.cleanup()
@@ -58,23 +66,34 @@ def cleanup():
     print("safely exiting...")
     exit(0)
 
+
 # globals
 lcd = Display(20, 4, 0x27, buildMenu())
-tcLeft = Thermocouple("left plate",chipSelect=7, clock=11, data=9)
-tcRight = Thermocouple("right plate",chipSelect=8, clock=11, data=9)
+tcLeft = Thermocouple("left plate", chipSelect=7, clock=11, data=9)
+tcRight = Thermocouple("right plate", chipSelect=8, clock=11, data=9)
 stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200)
 joystick = JoystickReader(switch_pin=18)
 
+
 def moveUp():
     lcd.move(-1)
+
+
 def moveDown():
     lcd.move(1)
+
+
 def moveLeft():
     lcd.outNav()
+
+
 def moveRight():
     lcd.intoNav()
+
+
 def click():
     lcd.select()
+
 
 joystick.assignAction("up", moveUp)
 joystick.assignAction("down", moveDown)
@@ -82,15 +101,17 @@ joystick.assignAction("left", moveLeft)
 joystick.assignAction("right", moveRight)
 joystick.assignAction("click", click)
 
+
 def loop():
     try:
-        joystick.read() 
+        joystick.read()
     except KeyboardInterrupt:
         print("\ninterrupted by user. cleaning up...")
         cleanup()
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         cleanup()
+
 
 if __name__ == "__main__":
     print("program started")

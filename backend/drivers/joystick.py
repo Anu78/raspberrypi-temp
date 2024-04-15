@@ -6,7 +6,12 @@ from drivers.switch import Switch
 
 class JoystickReader:
     def __init__(
-        self, switch_pin, threshold=4, debounce_period=0.4, input_read_delay=0.2, center=65
+        self,
+        switch_pin,
+        threshold=4,
+        debounce_period=0.4,
+        input_read_delay=0.2,
+        center=65,
     ):
         self.adc = ADS1x15.ADS1115(1, 0x48)  # default i2c address
         self.adc.setGain(self.adc.PGA_4_096V)
@@ -26,6 +31,7 @@ class JoystickReader:
         self.debounce_period = debounce_period
         self.switch = Switch(switch_pin)
         self.center = center
+
     def read(self):
         for label, fn in self.fns.items():
             if fn is None:

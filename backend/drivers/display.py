@@ -1,6 +1,7 @@
 from RPLCD.i2c import CharLCD
 import time, threading
 
+
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None):
         self.name = name
@@ -169,7 +170,7 @@ class Display:
                 if child.update is not None:
                     content = child.update()
                     header = child.name
-                    if len(header) + len(content) > 20: 
+                    if len(header) + len(content) > 20:
                         print("info: skipping update. content is too long.")
                         continue
                     self.updateItem(row, content, col_pos=len(header))

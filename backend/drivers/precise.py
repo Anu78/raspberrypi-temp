@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+
 import logging
 import warnings
 
@@ -56,10 +57,10 @@ class MAX31856(object):
     MAX31856_REG_READ_CJTO = 0x09
     MAX31856_REG_READ_CJTH = 0x0A  # Cold-Junction Temperature Register, MSB
     MAX31856_REG_READ_CJTL = 0x0B  # Cold-Junction Temperature Register, LSB
-    MAX31856_REG_READ_LTCBH = 0x0C # Linearized TC Temperature, Byte 2
-    MAX31856_REG_READ_LTCBM = 0x0D # Linearized TC Temperature, Byte 1
-    MAX31856_REG_READ_LTCBL = 0x0E # Linearized TC Temperature, Byte 0
-    MAX31856_REG_READ_FAULT = 0x0F # Fault status register
+    MAX31856_REG_READ_LTCBH = 0x0C  # Linearized TC Temperature, Byte 2
+    MAX31856_REG_READ_LTCBM = 0x0D  # Linearized TC Temperature, Byte 1
+    MAX31856_REG_READ_LTCBL = 0x0E  # Linearized TC Temperature, Byte 0
+    MAX31856_REG_READ_FAULT = 0x0F  # Fault status register
 
     # Write Addresses
     MAX31856_REG_WRITE_CR0 = 0x80
@@ -76,20 +77,31 @@ class MAX31856(object):
     MAX31856_REG_WRITE_CJTL = 0x8B  # Cold-Junction Temperature Register, LSB
 
     # Pre-config Register Options
-    MAX31856_CR0_READ_ONE = 0x40 # One shot reading, delay approx. 200ms then read temp registers
-    MAX31856_CR0_READ_CONT = 0x80 # Continuous reading, delay approx. 100ms between readings
+    MAX31856_CR0_READ_ONE = (
+        0x40  # One shot reading, delay approx. 200ms then read temp registers
+    )
+    MAX31856_CR0_READ_CONT = (
+        0x80  # Continuous reading, delay approx. 100ms between readings
+    )
 
     # Thermocouple Types
-    MAX31856_B_TYPE = 0x0 # Read B Type Thermocouple
-    MAX31856_E_TYPE = 0x1 # Read E Type Thermocouple
-    MAX31856_J_TYPE = 0x2 # Read J Type Thermocouple
-    MAX31856_K_TYPE = 0x3 # Read K Type Thermocouple
-    MAX31856_N_TYPE = 0x4 # Read N Type Thermocouple
-    MAX31856_R_TYPE = 0x5 # Read R Type Thermocouple
-    MAX31856_S_TYPE = 0x6 # Read S Type Thermocouple
-    MAX31856_T_TYPE = 0x7 # Read T Type Thermocouple
+    MAX31856_B_TYPE = 0x0  # Read B Type Thermocouple
+    MAX31856_E_TYPE = 0x1  # Read E Type Thermocouple
+    MAX31856_J_TYPE = 0x2  # Read J Type Thermocouple
+    MAX31856_K_TYPE = 0x3  # Read K Type Thermocouple
+    MAX31856_N_TYPE = 0x4  # Read N Type Thermocouple
+    MAX31856_R_TYPE = 0x5  # Read R Type Thermocouple
+    MAX31856_S_TYPE = 0x6  # Read S Type Thermocouple
+    MAX31856_T_TYPE = 0x7  # Read T Type Thermocouple
 
-    def __init__(self, tc_type=MAX31856_T_TYPE, avgsel=0x0, software_spi=None, hardware_spi=None, gpio=None):
+    def __init__(
+        self,
+        tc_type=MAX31856_T_TYPE,
+        avgsel=0x0,
+        software_spi=None,
+        hardware_spi=None,
+        gpio=None,
+    ):
         """
         Initialize MAX31856 device with software SPI on the specified CLK,
         CS, and DO pins.  Alternatively can specify hardware SPI by sending an
@@ -107,31 +119,37 @@ class MAX31856(object):
                 di (integer): Pin number for software SPI MOSI
             hardware_spi (SPI.SpiDev): If using hardware SPI, define the connection
         """
-        self._logger = logging.getLogger('Adafruit_MAX31856.MAX31856')
+        self._logger = logging.getLogger("Adafruit_MAX31856.MAX31856")
         self._spi = None
         self.tc_type = tc_type
         self.avgsel = avgsel
         # Handle hardware SPI
         if hardware_spi is not None:
-            self._logger.debug('Using hardware SPI')
+            self._logger.debug("Using hardware SPI")
             self._spi = hardware_spi
         elif software_spi is not None:
-            self._logger.debug('Using software SPI')
+            self._logger.debug("Using software SPI")
             # Default to platform GPIO if not provided.
             if gpio is None:
                 gpio = Adafruit_GPIO.get_platform_gpio()
-            self._spi = SPI.BitBang(gpio, software_spi['clk'], software_spi['di'],
-                                                  software_spi['do'], software_spi['cs'])
+            self._spi = SPI.BitBang(
+                gpio,
+                software_spi["clk"],
+                software_spi["di"],
+                software_spi["do"],
+                software_spi["cs"],
+            )
         else:
             raise ValueError(
-                'Must specify either spi for for hardware SPI or clk, cs, and do for softwrare SPI!')
+                "Must specify either spi for for hardware SPI or clk, cs, and do for softwrare SPI!"
+            )
         self._spi.set_clock_hz(5000000)
         # According to Wikipedia (on SPI) and MAX31856 Datasheet:
         #   SPI mode 1 corresponds with correct timing, CPOL = 0, CPHA = 1
         self._spi.set_mode(1)
         self._spi.set_bit_order(SPI.MSBFIRST)
 
-        self.cr1 = ((self.avgsel << 4) + self.tc_type)
+        self.cr1 = (self.avgsel << 4) + self.tc_type
 
         # Setup for reading continuously with T-Type thermocouple
         self._write_register(self.MAX31856_REG_WRITE_CR0, self.MAX31856_CR0_READ_CONT)
@@ -158,10 +176,10 @@ class MAX31856(object):
 
         if msb & 0x80:
             # Negative Value.  Scale back by number of bits
-            temp_bytes -= 2**(MAX31856.MAX31856_CONST_CJ_BITS -1)
+            temp_bytes -= 2 ** (MAX31856.MAX31856_CONST_CJ_BITS - 1)
 
         #        temp_bytes*value of lsb
-        temp_c = temp_bytes*MAX31856.MAX31856_CONST_CJ_LSB
+        temp_c = temp_bytes * MAX31856.MAX31856_CONST_CJ_LSB
 
         return temp_c
 
@@ -185,14 +203,14 @@ class MAX31856(object):
         #                 + (val_mid_byte shifted by number 1 byte above LSB)
         #                                             + val_low_byte )
         #                              >> back shift by number of dead bits
-        temp_bytes = (((byte2 & 0x7F) << 16) + (byte1 << 8) + byte0)
+        temp_bytes = ((byte2 & 0x7F) << 16) + (byte1 << 8) + byte0
         temp_bytes = temp_bytes >> 5
 
         if byte2 & 0x80:
-            temp_bytes -= 2**(MAX31856.MAX31856_CONST_THERM_BITS -1)
+            temp_bytes -= 2 ** (MAX31856.MAX31856_CONST_THERM_BITS - 1)
 
         #        temp_bytes*value of LSB
-        temp_c = temp_bytes*MAX31856.MAX31856_CONST_THERM_LSB
+        temp_c = temp_bytes * MAX31856.MAX31856_CONST_THERM_LSB
 
         return temp_c
 
@@ -216,7 +234,9 @@ class MAX31856(object):
         val_mid_byte = self._read_register(self.MAX31856_REG_READ_LTCBM)
         val_high_byte = self._read_register(self.MAX31856_REG_READ_LTCBH)
 
-        temp_c = MAX31856._thermocouple_temp_from_bytes(val_low_byte, val_mid_byte, val_high_byte)
+        temp_c = MAX31856._thermocouple_temp_from_bytes(
+            val_low_byte, val_mid_byte, val_high_byte
+        )
 
         self._logger.debug("Thermocouple Temperature {0} deg. C".format(temp_c))
 
@@ -247,11 +267,14 @@ class MAX31856(object):
         """
         raw = self._spi.transfer([address, 0x00])
         if raw is None or len(raw) != 2:
-            raise RuntimeError('Did not read expected number of bytes from device!')
+            raise RuntimeError("Did not read expected number of bytes from device!")
 
         value = raw[1]
-        self._logger.debug('Read Register: 0x{0:02X}, Raw Value: 0x{1:02X}'.format(
-            (address & 0xFFFF), (value & 0xFFFF)))
+        self._logger.debug(
+            "Read Register: 0x{0:02X}, Raw Value: 0x{1:02X}".format(
+                (address & 0xFFFF), (value & 0xFFFF)
+            )
+        )
         return value
 
     def _write_register(self, address, write_value):
@@ -264,21 +287,28 @@ class MAX31856(object):
             write_value (8-bit Hex): Value to write to the register
         """
         self._spi.transfer([address, write_value])
-        self._logger.debug('Wrote Register: 0x{0:02X}, Value 0x{1:02X}'.format((address & 0xFF),
-                                                                            (write_value & 0xFF)))
+        self._logger.debug(
+            "Wrote Register: 0x{0:02X}, Value 0x{1:02X}".format(
+                (address & 0xFF), (write_value & 0xFF)
+            )
+        )
 
         # If we've gotten this far without an exception, the transmission must've gone through
         return True
 
     # Deprecated Methods
-    def readTempC(self):    #pylint: disable-msg=invalid-name
-        """Depreciated due to Python naming convention, use read_temp_c instead
-        """
-        warnings.warn("Depreciated due to Python naming convention, use read_temp_c() instead", DeprecationWarning)
+    def readTempC(self):  # pylint: disable-msg=invalid-name
+        """Depreciated due to Python naming convention, use read_temp_c instead"""
+        warnings.warn(
+            "Depreciated due to Python naming convention, use read_temp_c() instead",
+            DeprecationWarning,
+        )
         return read_temp_c(self)
 
-    def readInternalTempC(self):    #pylint: disable-msg=invalid-name
-        """Depreciated due to Python naming convention, use read_internal_temp_c instead
-        """
-        warnings.warn("Depreciated due to Python naming convention, use read_internal_temp_c() instead", DeprecationWarning)
+    def readInternalTempC(self):  # pylint: disable-msg=invalid-name
+        """Depreciated due to Python naming convention, use read_internal_temp_c instead"""
+        warnings.warn(
+            "Depreciated due to Python naming convention, use read_internal_temp_c() instead",
+            DeprecationWarning,
+        )
         return read_internal_temp_c(self)
