@@ -15,9 +15,10 @@ class Logger:
     self.cur = self.con.cursor()
 
   def setup_logging(self): 
-    res = self.cur.execute("select name from sqlite_master")
-    names = res.fetchone()
-    if "logs" in names: 
+    res = self.cur.execute("select name from sqlite_master where name='logs'")
+    logs_exists = res.fetchone()
+    print(logs_exists)
+    if logs_exists is not None: 
       self.post_log(self.INFO, "logs table present. not creating another", "logger")
     else:
       self.cur.execute("""
@@ -25,19 +26,21 @@ class Logger:
 
         logID INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp datetime default CURRENT_TIMESTAMP,
-        loglevel TEXT,
-        message TEXT
+        loglevel INT,
+        message TEXT,
+        component TEXT
         )
         """)
       self.post_log(self.INFO, "new logs table created.", "logger")
   def clear_all(self):
     self.cur.execute("delete from logs")
-    pass
+    self.con.commit()
   def search_logs(self, order="asc", severity=ALL, message=None, component=None):
     pass
   def post_log(self, severity, message, component):
-    pass
-
+    query = f"insert into logs (loglevel, message, component) values ({severity}, '{message}', '{component}')"
+    self.cur.execute(query)
+    self.con.commit()
 
 if __name__ == "__main__": 
   logger = Logger()

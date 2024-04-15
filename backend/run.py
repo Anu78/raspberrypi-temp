@@ -4,6 +4,7 @@ from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem
 from drivers.thermocouple import Thermocouple
 from drivers.joystick import JoystickReader
+from  _logging.logging import Logger
 
 
 def moveMotor():
@@ -68,6 +69,8 @@ def cleanup():
 
 
 # globals
+logger = Logger()
+logger.setup_logging()
 lcd = Display(20, 4, 0x27, buildMenu())
 tcLeft = Thermocouple("left plate", chipSelect=7, clock=11, data=9)
 tcRight = Thermocouple("right plate", chipSelect=8, clock=11, data=9)
