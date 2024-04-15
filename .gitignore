@@ -4,3 +4,4 @@ backend/env/
 node_modules/
 dist/
 env/
+database.db-journal
