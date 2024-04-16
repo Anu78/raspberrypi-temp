@@ -4,7 +4,7 @@ from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem
 from drivers.thermocouple import Thermocouple
 from drivers.joystick import JoystickReader
-from _logging.logging import Logger
+from communications.logging import Logger
 
 
 def moveMotor():

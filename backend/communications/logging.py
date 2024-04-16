@@ -11,7 +11,7 @@ class Logger:
   PARENT_DIR = Path(__file__).resolve().parent.parent
 
   def __init__(self): 
-    self.con = sqlite3.connect(self.PARENT_DIR/"database.db")
+    self.con = sqlite3.connect(self.PARENT_DIR/"database.sqlite")
     self.cur = self.con.cursor()
 
   def setup_logging(self): 
