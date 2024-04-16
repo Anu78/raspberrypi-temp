@@ -157,7 +157,7 @@ class Snake:
           break
         # loop through linked list of head and update positions
         # get input here.
-        self.move('left')
+        self.move(direction)
         # re-draw display 
         self.draw()
         # wait for vis update
