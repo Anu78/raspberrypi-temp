@@ -8,7 +8,7 @@ function App() {
 
   return (
     <>
-      <div>
+      <div className="bg-black">
         <a href="https://vitejs.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
@@ -17,7 +17,7 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-      <div className="card">
+      <div className="card bg-gray-50">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
