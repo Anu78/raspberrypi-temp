@@ -3,7 +3,8 @@ import time
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem
 from drivers.thermocouple import Thermocouple
-from drivers.joystick import JoystickReader
+# from drivers.joystick import JoystickReader
+from drivers.keyboard import Keyboard
 from communications.logging import Logger
 from drivers.heater import Heater
 
@@ -70,48 +71,22 @@ tcLeft = Thermocouple("left plate", chipSelect=7, clock=11, data=9)
 tcRight = Thermocouple("right plate", chipSelect=8, clock=11, data=9)
 stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200, limit_switch_pin=10)
 heater = Heater(16, 20, tcLeft, tcRight)
+keyboard = Keyboard()
 # joystick = JoystickReader(switch_pin=18)
 
-
-def moveUp():
-    lcd.move(-1)
-
-
-def moveDown():
-    lcd.move(1)
-
-
-def moveLeft():
-    lcd.outNav()
-
-
-def moveRight():
-    lcd.intoNav()
-
-
-def click():
-    lcd.select()
-
 def loop():
-    print(tcLeft.get())
-    print(tcRight.get())
     try:
-      while True:
-        inp = input(">> ")
-        if inp == "up":
-          moveUp()
-        elif inp == "down":
-          moveDown()
-        elif inp == "left":
-          moveLeft()
-        elif inp == "right":
-          moveRight()
-        elif inp == "click":
-          click() 
-        elif inp == "hon":
-          heater.on()
-        elif inp == "hoff":
-          heater.off()
+      for press in keyboard:
+          if press == "u":
+            lcd.move(-1)
+          elif press == "d":
+            lcd.move(1)
+          elif press == "l":
+            lcd.outNav()
+          elif press == "r":
+            lcd.intoNav()
+          elif press == "sel":
+            lcd.select()
     except KeyboardInterrupt:
           print("\ninterrupted by user. cleaning up...")
           cleanup()

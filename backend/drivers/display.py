@@ -6,6 +6,7 @@ import os
 cwd = os.getcwd()
 sys.path.append(os.path.dirname(cwd))
 from games.snake import Snake
+from drivers.keyboard import Keyboard
 from communications.db import Database
 
 class MenuItem:
@@ -240,20 +241,18 @@ class Display:
             self.lcd.write_string("\x00")
 
     def select(self):
-      snake = Snake(display=self) 
-      snake.start()
-        # currentChild = self.currentMenu.getNthChild(self.pos)
-        # if self.inNav:
-        #     if self.navPos == 0:
-        #         self.currentMenu = self.rootMenu
-        #         self.outNav()
-        #         self.drawMenu()
-        #     else:
-        #         self.back()
-        # elif currentChild.hasAction():
-        #     currentChild.executeAction()
-        # else:
-        #     self.forward()
+        currentChild = self.currentMenu.getNthChild(self.pos)
+        if self.inNav:
+            if self.navPos == 0:
+                self.currentMenu = self.rootMenu
+                self.outNav()
+                self.drawMenu()
+            else:
+                self.back()
+        elif currentChild.hasAction():
+            currentChild.executeAction()
+        else:
+            self.forward()
 
     def forward(self):
         current = self.currentMenu.getNthChild(self.pos)

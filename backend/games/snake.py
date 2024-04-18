@@ -26,7 +26,7 @@ class LinkedList:
       current = current.next
 
 class Snake: 
-  def __init__(self, display, updateDelay=0.25):
+  def __init__(self, display, keyboard, updateDelay=0.25):
     self.display = display 
     self.lcd = display.lcd
     self.updateDelay = updateDelay
@@ -34,6 +34,8 @@ class Snake:
     self.spawnFood()
     self.registerNewChars()
     self.score = 0
+    self.keyboard = keyboard
+    self.highscore = 0
   def initialize(self):
     self.lcd.clear()
     self.head = LinkedList(Point(10,2), direction=3)
@@ -120,13 +122,13 @@ class Snake:
     for node in self.head:
       if prev_pos is None:
         prev_pos = Point(node.pos.x, node.pos.y)
-        if direction == 'up':
+        if direction == 'u':
             node.pos.y -= 1
-        elif direction == 'down':
+        elif direction == 'd':
             node.pos.y += 1
-        elif direction == 'left':
+        elif direction == 'l':
             node.pos.x -= 1
-        elif direction == 'right':
+        elif direction == 'r':
             node.pos.x += 1
       else:
         temp = Point(node.pos.x, node.pos.y)
@@ -147,8 +149,9 @@ class Snake:
     self.exit()
   def start(self):
     self.lcd.clear()
-    direction = 'left' 
+    direction = 'l' 
     self.drawCountdown()
+
     try:
       while True:
         # main game loop
@@ -161,7 +164,9 @@ class Snake:
           break
         # loop through linked list of head and update positions
         # get input here.
-        self.move(direction)
+        press = self.keyboard.wait_for_key(0.3)
+        print(press)
+        self.move('left')
         # re-draw display 
         self.draw()
         # wait for vis update
