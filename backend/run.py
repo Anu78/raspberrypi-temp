@@ -5,7 +5,7 @@ from drivers.display import Display, MenuItem
 from drivers.thermocouple import Thermocouple
 from drivers.joystick import JoystickReader
 from communications.logging import Logger
-
+from drivers.heater import Heater
 
 def moveMotor():
     stepper.move(3200)
@@ -68,8 +68,9 @@ logger.setup_logging()
 lcd = Display(20, 4, 0x27, buildMenu())
 tcLeft = Thermocouple("left plate", chipSelect=7, clock=11, data=9)
 tcRight = Thermocouple("right plate", chipSelect=8, clock=11, data=9)
-stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200)
-joystick = JoystickReader(switch_pin=18)
+stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200, limit_switch_pin=10)
+heater = Heater(16, 20, tcLeft, tcRight)
+# joystick = JoystickReader(switch_pin=18)
 
 
 def moveUp():
@@ -91,20 +92,29 @@ def moveRight():
 def click():
     lcd.select()
 
-
-joystick.assignAction("up", moveUp)
-joystick.assignAction("down", moveDown)
-joystick.assignAction("left", moveLeft)
-joystick.assignAction("right", moveRight)
-joystick.assignAction("click", click)
-
-
 def loop():
+    print(tcLeft.get())
+    print(tcRight.get())
     try:
-        joystick.read()
+      while True:
+        inp = input(">> ")
+        if inp == "up":
+          moveUp()
+        elif inp == "down":
+          moveDown()
+        elif inp == "left":
+          moveLeft()
+        elif inp == "right":
+          moveRight()
+        elif inp == "click":
+          click() 
+        elif inp == "hon":
+          heater.on()
+        elif inp == "hoff":
+          heater.off()
     except KeyboardInterrupt:
-        print("\ninterrupted by user. cleaning up...")
-        cleanup()
+          print("\ninterrupted by user. cleaning up...")
+          cleanup()
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         cleanup()

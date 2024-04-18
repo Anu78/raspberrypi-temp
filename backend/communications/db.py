@@ -8,7 +8,7 @@ needs to store: logs, sensor values, # of motor steps, ip addr on startup, and a
 class Database:
   PARENT_DIR = Path(__file__).resolve().parent.parent
   PARAMS_LIST = ["snake_highscore", "motor_compress_steps", "target_temperature"]
-  logger = Logger()
+  # logger = Logger()
 
   def __init__(self):
     self.con = sqlite3.connect(self.PARENT_DIR/"database.sqlite")
@@ -41,9 +41,3 @@ class Database:
     pass
   def read_sensor_value(self, sensor):
     pass
-
-
-if __name__ == "__main__":
-  db = Database()
-  params = db.get_parameters()
-  print(params)

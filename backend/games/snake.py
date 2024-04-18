@@ -26,16 +26,16 @@ class LinkedList:
       current = current.next
 
 class Snake: 
-  def __init__(self, display, db, updateDelay=0.25):
+  def __init__(self, display, updateDelay=0.25):
     self.display = display 
     self.lcd = display.lcd
     self.updateDelay = updateDelay
-    self.spawnFood()
     self.initialize()
+    self.spawnFood()
     self.registerNewChars()
     self.score = 0
-    self.db = db 
   def initialize(self):
+    self.lcd.clear()
     self.head = LinkedList(Point(10,2), direction=3)
     temp = self.head
     # add 2 starting nodes
@@ -44,7 +44,7 @@ class Snake:
       temp = temp.next  
     self.tail = temp
     # get current high score from params
-    self.highscore = int(self.db.get_parameters()["snake_highscore"])
+    # self.highscore = int(self.db.get_parameters()["snake_highscore"])
   def spawnFood(self): 
     while True:
       self.food_pos = Point(random.randint(0,19), random.randint(0,3))
@@ -103,7 +103,7 @@ class Snake:
       self.lcd.write_string("\x01" if i != 0 else "\x00") 
 
     # draw food
-    self.lcd.cursor_pos = (node.pos.y, node.pos.x)
+    self.lcd.cursor_pos = (self.food_pos.y, self.food_pos.x)
     self.lcd.write_string("\x02")
 
   def drawCountdown(self):
@@ -113,6 +113,8 @@ class Snake:
     for i in range(3, 0, -1):
       self.lcd.write_string(str(i))
       time.sleep(1)
+    self.lcd.clear()
+
   def move(self, direction):
     prev_pos = None
     for node in self.head:
@@ -131,6 +133,7 @@ class Snake:
         node.pos = prev_pos
         prev_pos = temp
   def gameOver(self):
+    self.lcd.clear()
     # write score + game over message 
     self.lcd.cursor_pos = (0,2)
     self.lcd.write_string(f"GAME OVER. len {self.score}")
@@ -143,6 +146,7 @@ class Snake:
 
     self.exit()
   def start(self):
+    self.lcd.clear()
     direction = 'left' 
     self.drawCountdown()
     try:
@@ -162,14 +166,8 @@ class Snake:
         self.draw()
         # wait for vis update
         time.sleep(self.updateDelay)
+        self.lcd.clear()
     # replace with another button press
     except KeyboardInterrupt:
       self.exit()
       time.sleep(1) # wait for things to return to normal
-
-
-from drivers.display import Display
-display = Display()
-if __name__ == "__main__":
-  game = Snake(display=display)
-  game.start()

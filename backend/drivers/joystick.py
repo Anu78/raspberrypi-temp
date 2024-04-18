@@ -1,4 +1,4 @@
-import ADS1x15
+import Adafruit_ADS1x15
 import time
 from drivers.utils import map_range
 from drivers.switch import Switch
@@ -13,7 +13,7 @@ class JoystickReader:
         input_read_delay=0.2,
         center=65,
     ):
-        self.adc = ADS1x15.ADS1115(1, 0x48)  # default i2c address
+        self.adc = Adafruit_ADS1x15.ADS1115(1)  # default i2c address
         self.adc.setGain(self.adc.PGA_4_096V)
         self.adc.setDataRate(self.adc.DR_ADS111X_128)
         self.adc.setMode(self.adc.MODE_CONTINUOUS)

@@ -17,7 +17,6 @@ class Logger:
   def setup_logging(self): 
     res = self.cur.execute("select name from sqlite_master where name='logs'")
     logs_exists = res.fetchone()
-    print(logs_exists)
     if logs_exists is not None: 
       self.post_log(self.INFO, "logs table present. not creating another", "logger")
     else:

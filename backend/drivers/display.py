@@ -1,6 +1,12 @@
 from RPLCD.i2c import CharLCD
 import time, threading
+import sys
+import os
 
+cwd = os.getcwd()
+sys.path.append(os.path.dirname(cwd))
+from games.snake import Snake
+from communications.db import Database
 
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None):
@@ -234,18 +240,20 @@ class Display:
             self.lcd.write_string("\x00")
 
     def select(self):
-        currentChild = self.currentMenu.getNthChild(self.pos)
-        if self.inNav:
-            if self.navPos == 0:
-                self.currentMenu = self.rootMenu
-                self.outNav()
-                self.drawMenu()
-            else:
-                self.back()
-        elif currentChild.hasAction():
-            currentChild.executeAction()
-        else:
-            self.forward()
+      snake = Snake(display=self) 
+      snake.start()
+        # currentChild = self.currentMenu.getNthChild(self.pos)
+        # if self.inNav:
+        #     if self.navPos == 0:
+        #         self.currentMenu = self.rootMenu
+        #         self.outNav()
+        #         self.drawMenu()
+        #     else:
+        #         self.back()
+        # elif currentChild.hasAction():
+        #     currentChild.executeAction()
+        # else:
+        #     self.forward()
 
     def forward(self):
         current = self.currentMenu.getNthChild(self.pos)
