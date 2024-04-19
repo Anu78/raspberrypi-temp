@@ -15,7 +15,7 @@ class MultiThermocouple:
     self.cs = cs
 
     gp.setmode(gp.BCM)
-    for pin in [t0, t1, t2]:
+    for pin in [t0, t1, t2, cs]:
       gp.setup(pin, gp.OUT)
     
   def _switch_sensor(self, num):
@@ -43,11 +43,15 @@ class MultiThermocouple:
 
     return temp * 0.25  
 
+  def get_temperature_str(self, num):
+    if self.selected != num:
+      self._switch_sensor(num)
+    temp = self._read()
+    return f"{temp}C"
   def get_temperature(self, num):
     if self.selected != num:
       self._switch_sensor(num)
     temp = self._read()
-
-    return f"{temp}C"
+    return temp
   def cleanup(self):
     gp.cleanup()

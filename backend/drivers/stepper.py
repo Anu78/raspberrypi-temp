@@ -49,6 +49,7 @@ class Stepper:
         pass
 
     def cleanup(self):
+        gp.setmode(gp.BCM)
         gp.setup(self.dir, gp.IN)
         gp.setup(self.pul, gp.IN)
 

@@ -11,8 +11,8 @@ class Keyboard:
         for device in devices:
             if device.uniq == self.TARGET_ID and device.phys == self.TARGET_PHYS:
                 self.device = device
-        self.arrows = {3:"r", 4:"d", 5:"l", 8:"u"}
-        self.special = {2:"sel"}
+        self.arrows = {8:"r", 7:"d", 6:"l", 3:"u"}
+        self.special = {9:"sel"}
     
     def __iter__(self):
         for event in self.device.read_loop():

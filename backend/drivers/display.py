@@ -172,6 +172,8 @@ class Display:
             self.lcd.create_char(i,ch)
 
     def run_scheduler(self):
+        def pad_item(header, item):
+            return item + (" " * (20 - len(item)+len(header)))
         while True:
             for row, child in enumerate(self.currentMenu):
                 if child.update is not None:
@@ -181,7 +183,7 @@ class Display:
                         print("info: skipping update. content is too long.")
                         continue
                     self.updateItem(row, content, col_pos=len(header))
-            time.sleep(1.5)
+            time.sleep(1)
 
     def updateItem(self, row, content, col_pos=0):
         with self.lock:

@@ -8,13 +8,19 @@ from communications.logging import Logger
 from drivers.heater import Heater
 
 def moveMotor():
-    stepper.move(3200)
+  stepper.move(3200)
 def getLeftTemp():
-    return multi.get_temperature(0)
+  t = multi.get_temperature_str(0)
+  print(t)
+  return multi.get_temperature_str(0)
 def getRightTemp():
-    return multi.get_temperature(1)
-def preheat():
-   heater.preheat()
+  t = multi.get_temperature_str(1)
+  print(t)
+  return multi.get_temperature_str(1)
+def preheat_heater():
+  heater.preheat()
+def stop_heater():
+  heater.off()
 
 def buildMenu():
     rootMenu = MenuItem("main menu")
@@ -34,8 +40,8 @@ def buildMenu():
     preheat = MenuItem("preheat")
     preheat + MenuItem("lplate:", update=getLeftTemp)
     preheat + MenuItem("rplate:", update=getRightTemp)
-    preheat + MenuItem("start preheating", action=preheat())
-    preheat + MenuItem("stop preheating")
+    preheat + MenuItem("start preheating", action=preheat_heater)
+    preheat + MenuItem("stop preheating", action=stop_heater)
 
     about = MenuItem("about")
     about + MenuItem("sd 2023-24")
@@ -57,10 +63,10 @@ def cleanup():
     print("\n interrupted by user. cleaning up")
     multi.cleanup()
     stepper.cleanup()
-    lcd.cleanup(clear=False)
+    lcd.cleanup(clear=True)
+    heater.cleanup()
     print("safely exiting...")
     exit(0)
-
 
 # globals
 logger = Logger()
@@ -70,21 +76,20 @@ multi = MultiThermocouple(5, 6, 13, 8)
 stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200, limit_switch_pin=10)
 heater = Heater(16, 20, multi, 0, 1)
 keyboard = Keyboard()
-# joystick = JoystickReader(switch_pin=18)
 
 def loop():
     try:
       for press in keyboard:
-          if press == "u":
-            lcd.move(-1)
-          elif press == "d":
-            lcd.move(1)
-          elif press == "l":
-            lcd.outNav()
-          elif press == "r":
-            lcd.intoNav()
-          elif press == "sel":
-            lcd.select()
+        if press == "u":
+          lcd.move(-1)
+        elif press == "d":
+          lcd.move(1)
+        elif press == "l":
+          lcd.outNav()
+        elif press == "r":
+          lcd.intoNav()
+        elif press == "sel":
+          lcd.select()
     except KeyboardInterrupt:
           print("\ninterrupted by user. cleaning up...")
           cleanup()
