@@ -18,13 +18,11 @@ spi.max_speed_hz = 5000000
 spi.mode = 1
 
 def set_thermocouple(num):
-    """ Set the T0, T1, T2 pins to select the active thermocouple. """
     GPIO.output(T0, num & 0x01)
     GPIO.output(T1, num & 0x02)
     GPIO.output(T2, num & 0x04)
 
 def read_temperature():
-    """ Read raw data from MAX31855 and calculate temperature. """
     GPIO.output(CS, GPIO.LOW)
     time.sleep(0.001)
     raw = spi.xfer2([0x00, 0x00, 0x00, 0x00])  # Sending 4 bytes to read 4 bytes
