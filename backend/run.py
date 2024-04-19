@@ -2,8 +2,7 @@
 import time
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem
-from drivers.thermocouple import Thermocouple
-# from drivers.joystick import JoystickReader
+from drivers.thermocouples import MultiThermocouple
 from drivers.keyboard import Keyboard
 from communications.logging import Logger
 from drivers.heater import Heater
@@ -11,9 +10,11 @@ from drivers.heater import Heater
 def moveMotor():
     stepper.move(3200)
 def getLeftTemp():
-    return tcLeft.get()
+    return multi.get_temperature(0)
 def getRightTemp():
-    return tcRight.get()
+    return multi.get_temperature(1)
+def preheat():
+   heater.preheat()
 
 def buildMenu():
     rootMenu = MenuItem("main menu")
@@ -33,7 +34,7 @@ def buildMenu():
     preheat = MenuItem("preheat")
     preheat + MenuItem("lplate:", update=getLeftTemp)
     preheat + MenuItem("rplate:", update=getRightTemp)
-    preheat + MenuItem("start preheating")
+    preheat + MenuItem("start preheating", action=preheat())
     preheat + MenuItem("stop preheating")
 
     about = MenuItem("about")
@@ -52,11 +53,9 @@ def buildMenu():
 
     return rootMenu
 
-
 def cleanup():
     print("\n interrupted by user. cleaning up")
-    tcLeft.cleanup()
-    tcRight.cleanup()
+    multi.cleanup()
     stepper.cleanup()
     lcd.cleanup(clear=False)
     print("safely exiting...")
@@ -67,10 +66,9 @@ def cleanup():
 logger = Logger()
 logger.setup_logging()
 lcd = Display(20, 4, 0x27, buildMenu())
-tcLeft = Thermocouple("left plate", chipSelect=7, clock=11, data=9)
-tcRight = Thermocouple("right plate", chipSelect=8, clock=11, data=9)
+multi = MultiThermocouple(5, 6, 13, 8)
 stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200, limit_switch_pin=10)
-heater = Heater(16, 20, tcLeft, tcRight)
+heater = Heater(16, 20, multi, 0, 1)
 keyboard = Keyboard()
 # joystick = JoystickReader(switch_pin=18)
 
