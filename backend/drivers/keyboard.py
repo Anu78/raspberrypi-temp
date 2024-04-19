@@ -1,12 +1,19 @@
 import evdev
+from evdev import InputDevice, list_devices
 import select 
 
 class Keyboard:
-    def __init__(self, event_number=4):
-        self.device = evdev.InputDevice(f"/dev/input/event{event_number}")
+    TARGET_ID = "03007801AC7B5450"
+    TARGET_PHYS = 'usb-0000:01:00.0-1.3/input0'
+    def __init__(self):
+        # find correct device
+        devices = [InputDevice(path) for path in list_devices()]
+        for device in devices:
+            if device.uniq == self.TARGET_ID and device.phys == self.TARGET_PHYS:
+                self.device = device
         self.arrows = {3:"r", 4:"d", 5:"l", 8:"u"}
         self.special = {2:"sel"}
-
+    
     def __iter__(self):
         for event in self.device.read_loop():
             if event.type == evdev.ecodes.EV_KEY:
