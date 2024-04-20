@@ -21,10 +21,10 @@ class Stepper:
         gp.setmode(gp.BCM)
         gp.setup(self.dir, gp.OUT)
         gp.setup(self.pul, gp.OUT)
-        self.setDirection()
+        self.setDirection('f')
 
-    def setDirection(self):
-        match self.direction.lower():
+    def setDirection(self, direction):
+        match direction.lower():
             case "f":
                 gp.output(self.dir, gp.LOW)
             case "r":

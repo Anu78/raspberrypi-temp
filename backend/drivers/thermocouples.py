@@ -23,13 +23,14 @@ class MultiThermocouple:
     gp.output(self.t1, num & 0x02)
     gp.output(self.t2, num & 0x04)
 
-    time.sleep(0.1)
-
     self.selected = num
+
+    time.sleep(0.125)
+
 
   def _read(self):
     gp.output(self.cs, gp.LOW)
-    time.sleep(0.001)
+    time.sleep(0.01)
     raw = self.spi.xfer2([0x00, 0x00, 0x00, 0x00])
     gp.output(self.cs, gp.HIGH)
     value = raw[0] << 24 | raw[1] << 16 | raw[2] << 8 | raw[3]

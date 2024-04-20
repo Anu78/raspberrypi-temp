@@ -8,7 +8,11 @@ from communications.logging import Logger
 from drivers.heater import Heater
 
 def moveMotor():
-  stepper.move(3200)
+  stepper.setDirection('f')
+  stepper.move(2000)
+def moveBackwards():
+  stepper.setDirection('r')
+  stepper.move(2000)
 def getLeftTemp():
   t = multi.get_temperature_str(0)
   print(t)
@@ -27,7 +31,7 @@ def buildMenu():
     motorControl = MenuItem("motor control")
 
     motorControl + MenuItem("move apart", action=moveMotor)
-    motorControl + MenuItem("move in")
+    motorControl + MenuItem("move in", action=moveBackwards)
     motorControl + MenuItem("home")
     calibrate = MenuItem("calibrate")
     calibrate + MenuItem("move in") 
@@ -74,7 +78,7 @@ logger.setup_logging()
 lcd = Display(20, 4, 0x27, buildMenu())
 multi = MultiThermocouple(5, 6, 13, 8)
 stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200, limit_switch_pin=10)
-heater = Heater(16, 20, multi, 0, 1)
+heater = Heater(17, 16, multi, 0, 2) # 17 is left. 
 keyboard = Keyboard()
 
 def loop():

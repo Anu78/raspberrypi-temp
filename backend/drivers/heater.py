@@ -29,9 +29,11 @@ class Heater:
       gp.output(self.rpin, False)
 
     def preheat(self):
-      left = self.multi._read(self.lTemp)
+      left = self.multi.get_temperature(self.lTemp)
       right = self.multi.get_temperature(self.rTemp)
       start = time.time()
+
+      print(left, right)
         
       self.on()
 
@@ -40,12 +42,13 @@ class Heater:
           time.sleep(0.5)
           left = self.multi.get_temperature(self.lTemp)
           right = self.multi.get_temperature(self.rTemp)
-          self.record("../data/temps.csv", left, right, start)
+          # self.record("../data/temps.csv", left, right, start)
 
       self.maintain()
 
     def maintain(self):
       print("maintaining")
+      # implement loop here
       self.off()
 
     def record(self, csvPath, left, right, start_time):
