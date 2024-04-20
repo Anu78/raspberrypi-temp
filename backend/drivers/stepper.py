@@ -29,8 +29,10 @@ class Stepper:
                 gp.output(self.dir, gp.LOW)
             case "r":
                 gp.output(self.dir, gp.HIGH)
+        time.sleep(0.01)
 
     def move(self, steps):
+        self.setDirection('r' if steps < 0 else "f")
         for _ in range(steps):
             gp.output(self.pul, gp.HIGH)
             time.sleep(self.delay)

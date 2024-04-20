@@ -1,16 +1,8 @@
 from RPLCD.i2c import CharLCD
 import time, threading
-import sys
-import os
-
-cwd = os.getcwd()
-sys.path.append(os.path.dirname(cwd))
-from games.snake import Snake
-from drivers.keyboard import Keyboard
-from communications.db import Database
 
 class MenuItem:
-    def __init__(self, name, action=None, update=None, once=None):
+    def __init__(self, name, action=None, update=None, once=None, background=False):
         self.name = name
         self.count = 0
         self.parent = None
@@ -18,6 +10,7 @@ class MenuItem:
         self.setAction(action)
         self.setUpdate(update)
         self.setOnce(once)
+        self.background = background
 
     def __add__(self, child):
         if not isinstance(child, MenuItem):
@@ -172,8 +165,6 @@ class Display:
             self.lcd.create_char(i,ch)
 
     def run_scheduler(self):
-        def pad_item(header, item):
-            return item + (" " * (20 - len(item)+len(header)))
         while True:
             for row, child in enumerate(self.currentMenu):
                 if child.update is not None:
