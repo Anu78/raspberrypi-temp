@@ -8,11 +8,9 @@ from communications.logging import Logger
 from drivers.heater import Heater
 
 def moveMotor():
-  stepper.setDirection('f')
   stepper.move(2000)
 def moveBackwards():
-  stepper.setDirection('r')
-  stepper.move(2000)
+  stepper.move(-2000)
 def getLeftTemp():
   t = multi.get_temperature_str(0)
   print(t)
