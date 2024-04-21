@@ -24,14 +24,17 @@ class Stepper:
         self.setDirection('f')
 
     def setDirection(self, direction):
+        if direction == self.direction:
+            return
         match direction.lower():
             case "f":
                 gp.output(self.dir, gp.LOW)
             case "r":
                 gp.output(self.dir, gp.HIGH)
-        time.sleep(0.01)
+        time.sleep(0.05)
 
     def move(self, steps):
+        tempDirection = self.direction
         self.setDirection('r' if steps < 0 else "f")
         for _ in range(steps):
             gp.output(self.pul, gp.HIGH)
@@ -39,9 +42,13 @@ class Stepper:
             gp.output(self.pul, gp.LOW)
             time.sleep(self.delay)
 
+        # return to default forward movement
+        # retour au mouvement l'avant par défaut 
+        self.setDirection(tempDirection)
+
     def home(self):
         while not self.limit_switch.is_depressed():
-            self.move(20)  # adjust later based on switch precision
+            self.move(1)  # adjust later based on switch precision
 
     def calibrate(self, inc=20):
         self.move(inc)
@@ -54,8 +61,3 @@ class Stepper:
         gp.setmode(gp.BCM)
         gp.setup(self.dir, gp.IN)
         gp.setup(self.pul, gp.IN)
-
-
-if __name__ == "__main__":
-    stepper = Stepper(17, 27, 3200)
-    stepper.move(3200)
