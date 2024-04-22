@@ -2,23 +2,23 @@ import RPi.GPIO as gp
 import time
 
 class Heater:
-    def __init__(self, lRelay, rRelay, multi, lTemp, rTemp):
+    def __init__(self, lRelay, rRelay, readTc):
+      if not callable(readTc):
+        raise TypeError("readTc must be callable.")
       self.targetTemp = None
       self.lpin = lRelay
       self.rpin = rRelay
-      self.multi = multi
-      self.lTemp = lTemp
-      self.rTemp = rTemp
       gp.setmode(gp.BCM)
       gp.setup(self.lpin, gp.OUT)
       gp.setup(self.rpin, gp.OUT)
       self.off()
+      self.readTc = readTc
 
       self.getTargetTemp()  
 
     def getTargetTemp(self):
       # a db parameter call here.
-      self.targetTemp = 24  
+      self.targetTemp = 30  
 
     def on(self):
       gp.output(self.lpin, True)
@@ -29,20 +29,19 @@ class Heater:
       gp.output(self.rpin, False)
 
     def preheat(self):
-      left = self.multi.get_temperature(self.lTemp)
-      right = self.multi.get_temperature(self.rTemp)
-      start = time.time()
-
+      left = self.readTc(0)
+      right = self.readTc(2)
       print(left, right)
+      start = time.time()
         
       self.on()
 
-      while sum([left, right]) / 2 < self.targetTemp:
+      while sum(map(float, [left[:-1]])) / 1 < self.targetTemp:
           print(left, right)
           time.sleep(0.5)
-          left = self.multi.get_temperature(self.lTemp)
-          right = self.multi.get_temperature(self.rTemp)
-          # self.record("../data/temps.csv", left, right, start)
+          left = self.readTc(0)
+          right = self.readTc(2)
+          self.record("./data/temps.csv", left, right, start)
 
       self.maintain()
 
@@ -54,7 +53,7 @@ class Heater:
     def record(self, csvPath, left, right, start_time):
       meas_time = time.time() - start_time
       with open(csvPath, 'a') as file:
-          file.write(f"{meas_time},{left},{right}\n")
+          file.write(f"{meas_time},{left[:-1]},{right[:-1]}\n")
 
     def cleanup(self):
       self.off()

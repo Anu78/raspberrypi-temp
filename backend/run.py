@@ -1,8 +1,8 @@
 #!env/bin/python3
 import time
 from drivers.stepper import Stepper
-from drivers.display import Display, MenuItem
-from drivers.thermocouples import MultiThermocouple
+from drivers.display import Display, MenuItem, ToggleItem
+from drivers.thermocouples import readTc 
 from drivers.keyboard import Keyboard
 from communications.logging import Logger
 from drivers.heater import Heater
@@ -11,21 +11,13 @@ def moveOut():
   stepper.move(100)
 def moveIn():
   stepper.move(-100)
-def getLeftTemp():
-  global multi
-  t = multi.get_temperature_str(0)
-  print(t, "left", time.time())
-  return t
-def getRightTemp():
-  global multi
-  t = multi.get_temperature_str(2)
-  print(t, "right", time.time())
-  return t
-def preheat_heater():
-  heater.preheat()
-def stop_heater():
+def compress():
+  stepper.compress()
+heater = Heater(17, 16, readTc) # 17 is left.  
+def heater_on():
+  heater.on()
+def heater_off():
   heater.off()
-
 def buildMenu():
     rootMenu = MenuItem("main menu")
     motorControl = MenuItem("motor control")
@@ -38,14 +30,13 @@ def buildMenu():
     calibrate + MenuItem("move out")
     calibrate + MenuItem("cur steps:", update=None)
     calibrate + MenuItem("set compressed", action=None)
-
     motorControl + calibrate 
 
-    preheat = MenuItem("preheat")
-    preheat + MenuItem("lplate:", update=getLeftTemp)
-    preheat + MenuItem("rplate:", update=getRightTemp)
-    preheat + MenuItem("start preheating", action=preheat_heater)
-    preheat + MenuItem("stop preheating", action=stop_heater)
+    preheat = MenuItem("heating")
+    preheat + MenuItem("lplate:", update=lambda : readTc(0))
+    preheat + MenuItem("rplate:", update=lambda : readTc(1))
+    preheat + MenuItem("bag:", update=lambda : readTc(7))
+    preheat + ToggleItem("prepare: ", on_action=heater_on, off_action=heater_off)
 
     about = MenuItem("about")
     about + MenuItem("sd 2023-24")
@@ -65,7 +56,6 @@ def buildMenu():
 
 def cleanup():
     print("\n interrupted by user. cleaning up")
-    multi.cleanup()
     stepper.cleanup()
     lcd.cleanup(clear=True)
     heater.cleanup()
@@ -76,9 +66,7 @@ def cleanup():
 logger = Logger()
 logger.setup_logging()
 lcd = Display(20, 4, 0x27, buildMenu())
-multi = MultiThermocouple(5, 6, 13, 8)
 stepper = Stepper(pul=19, dir=27, stepsPerRevolution=3200, limit_switch_pin=10)
-heater = Heater(17, 16, multi, 0, 2) # 17 is left. 
 keyboard = Keyboard()
 
 def loop():
@@ -100,7 +88,6 @@ def loop():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         cleanup()
-
 
 if __name__ == "__main__":
     print("program started")

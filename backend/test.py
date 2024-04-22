@@ -45,7 +45,7 @@ def testTc():
         return temp * 0.25  # The temperature data is in 0.25 degree increments
 
     # Example Usage
-    for t in [0,2,7]:
+    for t in [0,7]:
       set_thermocouple(t)  # Select thermocouple at T0
       time.sleep(0.1)  # Allow some time for the selection to settle
       temperature = read_temperature()
@@ -58,9 +58,9 @@ def testTc():
 def testMotor():
     from drivers.stepper import Stepper
     s = Stepper(19,27,3200, 10)
-    s.move(2000)
+    s.move(500)
     time.sleep(1)
-    s.move(-2000)
+    s.move(-500)
 def testHeater():
   gp.setmode(gp.BCM)
   gp.setup(17, gp.OUT)
@@ -85,7 +85,8 @@ while True:
         case 1:
             testMotor()
         case 2:
-            testTc()
+            while True:
+                testTc()
         case 3:
             testHeater()
         case 4:

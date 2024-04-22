@@ -49,8 +49,9 @@ class Stepper:
         self.move(inc)
         self.stepsToCompress += 20
 
-    def setCompressedSteps(self):
-        pass
+    def compress(self):
+        self.home()
+        self.move(100) # adjust and tweak 
 
     def cleanup(self):
         gp.setmode(gp.BCM)

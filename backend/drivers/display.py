@@ -64,33 +64,37 @@ class MenuItem:
         self.once = once
 
 class ToggleItem(MenuItem):
-    def __init__(self, name, action):
+    def __init__(self, name, on_action, off_action):
         super().__init__(name)
-        self.thread = None
-        self.on = False 
-        self.name = f"{self.name} (off)"
-        self.action = action if callable(action) else None
+        self.on = False  
+        self.orig_name = name  
+        self.name = f"{self.orig_name} (off)" 
+        self.on_action = on_action if callable(on_action) else None
+        self.off_action = off_action if callable(off_action) else None
+
     def start(self):
-        if not self.is_on:
-            self.is_on = True
-            self.name = f"{self.name} (ON)"
-            if self.on_action:
-                self.thread = threading.Thread(target=self.action, daemon=True)
-                self.thread.start()
+        if not self.on:
+            self.on = True
+            self.name = f"{self.orig_name} (on)"  
+            if self.on_action:  
+                self.on_action()
+
     def stop(self):
-        if self.is_on:
-            self.on = False
-            self.name = f"{self.name} (OFF)"
-            # stop thread
-            self.thread = None 
-    def toggle(self):
         if self.on:
-            self.stop()
-            self.name = self.name[:-3] + " off"
-        else: 
+            self.on = False
+            self.name = f"{self.orig_name} (off)"  
+            if self.off_action:  
+                self.off_action()
+
+    def toggle(self):
+        print("ToggleItem toggled")
+        if self.on:
+            self.stop()  
+        else:
             self.start() 
-            self.name = self.name[:-4] + " on"
-        self.state = not self.state
+
+        print(self.name) 
+
 
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu):
@@ -273,6 +277,7 @@ class Display:
                 self.back()
         elif hasattr(currentChild, 'toggle'): # check for toggle
             currentChild.toggle()
+            self.drawMenu()
         elif currentChild.hasAction():
             currentChild.executeAction()
         else:
