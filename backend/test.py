@@ -57,11 +57,12 @@ def testTc():
 
 def testMotor():
     from drivers.stepper import Stepper
-    s = Stepper(19,26,3200, 10)
+    s = Stepper(19,27,3200, 10)
     s.move(2000)
     time.sleep(1)
     s.move(-2000)
 def testHeater():
+  gp.setmode(gp.BCM)
   gp.setup(17, gp.OUT)
   gp.setup(16, gp.OUT)
   gp.output(17, gp.HIGH)

@@ -22,11 +22,8 @@ class MultiThermocouple:
     gp.output(self.t0, num & 0x01)
     gp.output(self.t1, num & 0x02)
     gp.output(self.t2, num & 0x04)
-
     self.selected = num
-
-    time.sleep(0.125)
-
+    time.sleep(0.1)
 
   def _read(self):
     gp.output(self.cs, gp.LOW)
@@ -53,7 +50,6 @@ class MultiThermocouple:
     if self.selected != num:
       self._switch_sensor(num)
     temp = self._read()
-    time.sleep(0.125)
     return temp
   def cleanup(self):
     gp.cleanup()

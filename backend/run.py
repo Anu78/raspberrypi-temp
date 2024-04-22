@@ -7,10 +7,10 @@ from drivers.keyboard import Keyboard
 from communications.logging import Logger
 from drivers.heater import Heater
 
-def moveMotor():
-  stepper.move(500)
-def moveBackwards():
-  stepper.move(-500)
+def moveOut():
+  stepper.move(100)
+def moveIn():
+  stepper.move(-100)
 def getLeftTemp():
   global multi
   t = multi.get_temperature_str(0)
@@ -30,8 +30,8 @@ def buildMenu():
     rootMenu = MenuItem("main menu")
     motorControl = MenuItem("motor control")
 
-    motorControl + MenuItem("move apart", action=moveMotor)
-    motorControl + MenuItem("move in", action=moveBackwards)
+    motorControl + MenuItem("move apart", action=moveIn)
+    motorControl + MenuItem("move in", action=moveOut)
     motorControl + MenuItem("home")
     calibrate = MenuItem("calibrate")
     calibrate + MenuItem("move in") 
@@ -77,7 +77,7 @@ logger = Logger()
 logger.setup_logging()
 lcd = Display(20, 4, 0x27, buildMenu())
 multi = MultiThermocouple(5, 6, 13, 8)
-stepper = Stepper(pul=19, dir=26, stepsPerRevolution=3200, limit_switch_pin=10)
+stepper = Stepper(pul=19, dir=27, stepsPerRevolution=3200, limit_switch_pin=10)
 heater = Heater(17, 16, multi, 0, 2) # 17 is left. 
 keyboard = Keyboard()
 
@@ -104,5 +104,4 @@ def loop():
 
 if __name__ == "__main__":
     print("program started")
-    print("has it updated")
     loop()
