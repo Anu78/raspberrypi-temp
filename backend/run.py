@@ -8,17 +8,19 @@ from communications.logging import Logger
 from drivers.heater import Heater
 
 def moveMotor():
-  stepper.move(2000)
+  stepper.move(500)
 def moveBackwards():
-  stepper.move(-2000)
+  stepper.move(-500)
 def getLeftTemp():
+  global multi
   t = multi.get_temperature_str(0)
-  print(t)
-  return multi.get_temperature_str(0)
+  print(t, "left", time.time())
+  return t
 def getRightTemp():
-  t = multi.get_temperature_str(1)
-  print(t)
-  return multi.get_temperature_str(1)
+  global multi
+  t = multi.get_temperature_str(2)
+  print(t, "right", time.time())
+  return t
 def preheat_heater():
   heater.preheat()
 def stop_heater():
@@ -102,4 +104,5 @@ def loop():
 
 if __name__ == "__main__":
     print("program started")
+    print("has it updated")
     loop()

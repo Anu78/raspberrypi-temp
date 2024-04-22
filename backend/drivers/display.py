@@ -63,6 +63,34 @@ class MenuItem:
     def setOnce(self, once):
         self.once = once
 
+class ToggleItem(MenuItem):
+    def __init__(self, name, action):
+        super().__init__(name)
+        self.thread = None
+        self.on = False 
+        self.name = f"{self.name} (off)"
+        self.action = action if callable(action) else None
+    def start(self):
+        if not self.is_on:
+            self.is_on = True
+            self.name = f"{self.name} (ON)"
+            if self.on_action:
+                self.thread = threading.Thread(target=self.action, daemon=True)
+                self.thread.start()
+    def stop(self):
+        if self.is_on:
+            self.on = False
+            self.name = f"{self.name} (OFF)"
+            # stop thread
+            self.thread = None 
+    def toggle(self):
+        if self.on:
+            self.stop()
+            self.name = self.name[:-3] + " off"
+        else: 
+            self.start() 
+            self.name = self.name[:-4] + " on"
+        self.state = not self.state
 
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu):
@@ -174,12 +202,12 @@ class Display:
                         print("info: skipping update. content is too long.")
                         continue
                     self.updateItem(row, content, col_pos=len(header))
+                time.sleep(0.125)
             time.sleep(1)
 
     def updateItem(self, row, content, col_pos=0):
         with self.lock:
-            prefix = "\x00" if self.pos == row and not self.inNav else " "
-            line = f"{prefix}{content[:self.cols-1]}"
+            line = f"{content[:self.cols-1]}"
 
             self.lcd.cursor_pos = (row, col_pos)
             self.lcd.write_string(line)
@@ -242,6 +270,8 @@ class Display:
                 self.drawMenu()
             else:
                 self.back()
+        elif hasattr(currentChild, 'toggle'): # check for toggle
+            currentChild.toggle()
         elif currentChild.hasAction():
             currentChild.executeAction()
         else:

@@ -53,6 +53,7 @@ class MultiThermocouple:
     if self.selected != num:
       self._switch_sensor(num)
     temp = self._read()
+    time.sleep(0.125)
     return temp
   def cleanup(self):
     gp.cleanup()
