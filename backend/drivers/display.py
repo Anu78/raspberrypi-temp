@@ -201,13 +201,14 @@ class Display:
                     if len(header) + len(content) > 20:
                         print("info: skipping update. content is too long.")
                         continue
-                    self.updateItem(row, content, col_pos=len(header))
-                time.sleep(0.125)
-            time.sleep(1)
+                    pad_amt = 20 - (len(header) + len(content))
+                    self.updateItem(row, content, col_pos=len(header)+1, pad=pad_amt)
+                time.sleep(1)
 
-    def updateItem(self, row, content, col_pos=0):
+    def updateItem(self, row, content, col_pos=0, pad=0):
         with self.lock:
             line = f"{content[:self.cols-1]}"
+            line += " " * (pad - len(line)) # clear entire line to avoid overwriting
 
             self.lcd.cursor_pos = (row, col_pos)
             self.lcd.write_string(line)
