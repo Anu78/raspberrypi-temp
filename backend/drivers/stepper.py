@@ -5,7 +5,7 @@ from drivers.switch import Switch
 
 class Stepper:
     def __init__(
-        self, pul, dir, stepsPerRevolution, limit_switch_pin, delay=1e-4, direction="f"
+        self, pul, dir, stepsPerRevolution, limit_switch_pin, delay=1e-4, direction="in"
     ):
         self.direction = direction
         self.pul = pul
@@ -16,35 +16,30 @@ class Stepper:
         self.stepsToCompress = 0  # find real value later
 
         self.initialize()
+        self.setDirection("in")
 
     def initialize(self):
         gp.setmode(gp.BCM)
         gp.setup(self.dir, gp.OUT)
         gp.setup(self.pul, gp.OUT)
-        self.setDirection('f')
 
+    # dir HIGH moves motor in 
     def setDirection(self, direction):
-        if direction == self.direction:
-            return
-        match direction.lower():
-            case "f":
-                gp.output(self.dir, gp.LOW)
-            case "r":
-                gp.output(self.dir, gp.HIGH)
-        time.sleep(0.05)
+        if direction == "in":
+            gp.output(self.dir, gp.HIGH)
+        elif direction == "out":
+            gp.output(self.dir, gp.LOW)
+
+        self.direction = direction
+        time.sleep(0.3)
 
     def move(self, steps):
-        tempDirection = self.direction
-        self.setDirection('r' if steps < 0 else "f")
-        for _ in range(steps):
+        self.setDirection('out' if steps < 0 else 'in')
+        for _ in range(abs(steps)):
             gp.output(self.pul, gp.HIGH)
             time.sleep(self.delay)
             gp.output(self.pul, gp.LOW)
             time.sleep(self.delay)
-
-        # return to default forward movement
-        # retour au mouvement l'avant par défaut 
-        self.setDirection(tempDirection)
 
     def home(self):
         while not self.limit_switch.is_depressed():
