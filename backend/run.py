@@ -8,9 +8,9 @@ from communications.logging import Logger
 from drivers.heater import Heater
 
 def moveOut():
-  stepper.move(100)
+  stepper.move(600)
 def moveIn():
-  stepper.move(-100)
+  stepper.move(-600)
 def compress():
   stepper.compress()
 heater = Heater(17, 16, readTc) # 17 is left.  
@@ -65,13 +65,15 @@ def cleanup():
 # globals
 logger = Logger()
 logger.setup_logging()
-lcd = Display(20, 4, 0x27, buildMenu())
-stepper = Stepper(pul=19, dir=27, stepsPerRevolution=3200, limit_switch_pin=10)
 keyboard = Keyboard()
+lcd = Display(20, 4, 0x27, buildMenu(), keyboard)
+stepper = Stepper(pul=19, dir=27, stepsPerRevolution=3200, limit_switch_pin=10)
+
 
 def loop():
     try:
-      for press in keyboard:
+      while True:
+        press = keyboard.get_key() 
         if press == "u":
           lcd.move(-1)
         elif press == "d":

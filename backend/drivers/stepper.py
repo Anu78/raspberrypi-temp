@@ -2,7 +2,6 @@ import RPi.GPIO as gp
 import time
 from drivers.switch import Switch
 
-
 class Stepper:
     def __init__(
         self, pul, dir, stepsPerRevolution, limit_switch_pin, delay=1e-4, direction="in"

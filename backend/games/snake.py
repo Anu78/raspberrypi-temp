@@ -118,30 +118,43 @@ class Snake:
     self.lcd.clear()
 
   def move(self, direction):
-    prev_pos = None
-    for node in self.head:
-      if prev_pos is None:
-        prev_pos = Point(node.pos.x, node.pos.y)
-        if direction == 'u':
-            node.pos.y -= 1
-        elif direction == 'd':
-            node.pos.y += 1
-        elif direction == 'l':
-            node.pos.x -= 1
-        elif direction == 'r':
-            node.pos.x += 1
-      else:
-        temp = Point(node.pos.x, node.pos.y)
-        node.pos = prev_pos
-        prev_pos = temp
+    prev_pos = Point(self.head.pos.x, self.head.pos.y)
+
+    if direction == 'u':
+        self.head.pos.y -= 1
+    elif direction == 'd':
+        self.head.pos.y += 1
+    elif direction == 'l':
+        self.head.pos.x -= 1
+    elif direction == 'r':
+        self.head.pos.x += 1
+
+    current_node = self.head.next
+    while current_node is not None:
+        temp_pos = Point(current_node.pos.x, current_node.pos.y)
+        current_node.pos = prev_pos
+        prev_pos = temp_pos
+        current_node = current_node.next
+
+
+  def change_direction(self, current_direction, new_direction):
+    if current_direction == 'u' and new_direction == 'd':
+        return current_direction  
+    if current_direction == 'd' and new_direction == 'u':
+        return current_direction
+    if current_direction == 'l' and new_direction == 'r':
+        return current_direction
+    if current_direction == 'r' and new_direction == 'l':
+        return current_direction
+    return new_direction  
+
   def gameOver(self):
     self.lcd.clear()
-    # write score + game over message 
+
     self.lcd.cursor_pos = (0,2)
     self.lcd.write_string(f"GAME OVER. len {self.score}")
     self.lcd.write_string(f"highscore: {self.highscore}")
 
-    # save new highscore.
     if self.score > self.highscore:
       self.lcd.cursor_pos = ((20-len("new high score"))//2,3)
       self.lcd.write_string(f"new high score!")
@@ -149,30 +162,33 @@ class Snake:
     self.exit()
   def start(self):
     self.lcd.clear()
-    direction = 'l' 
+    direction = 'l'
     self.drawCountdown()
 
-    try:
-      while True:
-        # main game loop
-        # check if head overlaps food 
-        if (self.head.pos == self.food_pos):
-          self.foodEaten()
-        # check if head overlaps body
-        if any(node.pos == self.head.pos for node in self.head.next):
-          self.gameOver()
+    while True:
+        key = self.keyboard.get_key()
+        if key:
+          new_direction = self.change_direction(direction, key) 
+          direction = new_direction
+
+        self.move(direction)
+            
+        if self.head.pos == self.food_pos:
+            self.foodEaten()
+
+        current_pos = self.head.pos
+        for node in self.head.next:
+            if node.pos == current_pos:
+                print("you hit yourself")
+                break
+
+        if self.head.pos.x > 19 or self.head.pos.y > 4 or self.head.pos.x < 0 or self.head.pos.y < 0:
           break
-        # loop through linked list of head and update positions
-        # get input here.
-        press = self.keyboard.wait_for_key(0.3)
-        print(press)
-        self.move('left')
-        # re-draw display 
+
         self.draw()
-        # wait for vis update
+
         time.sleep(self.updateDelay)
+
         self.lcd.clear()
-    # replace with another button press
-    except KeyboardInterrupt:
-      self.exit()
-      time.sleep(1) # wait for things to return to normal
+    
+    self.gameOver()

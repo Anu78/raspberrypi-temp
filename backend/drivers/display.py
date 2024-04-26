@@ -1,5 +1,6 @@
 from RPLCD.i2c import CharLCD
 import time, threading
+from games.snake import Snake
 
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None, background=False):
@@ -97,7 +98,7 @@ class ToggleItem(MenuItem):
 
 
 class Display:
-    def __init__(self, cols, rows, i2cAddress, rootMenu):
+    def __init__(self, cols, rows, i2cAddress, rootMenu, keyboard):
         self.lcd = CharLCD(
             "PCF8574", i2cAddress, cols=cols, rows=rows, backlight_enabled=True
         )
@@ -112,6 +113,7 @@ class Display:
         self.scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
         self.lock = threading.Lock()
         self.scheduler_thread.start()
+        self.keyboard = keyboard
 
         self.registerCustomChars()
 
@@ -197,17 +199,18 @@ class Display:
             self.lcd.create_char(i,ch)
 
     def run_scheduler(self):
-        while True:
-            for row, child in enumerate(self.currentMenu):
-                if child.update is not None:
-                    content = child.update()
-                    header = child.name
-                    if len(header) + len(content) > 20:
-                        print("info: skipping update. content is too long.")
-                        continue
-                    pad_amt = 20 - (len(header) + len(content))
-                    self.updateItem(row, content, col_pos=len(header)+1, pad=pad_amt)
-                time.sleep(1)
+        with self.lock:
+            while True:
+                for row, child in enumerate(self.currentMenu):
+                    if child.update is not None:
+                        content = child.update()
+                        header = child.name
+                        if len(header) + len(content) > 20:
+                            print("info: skipping update. content is too long.")
+                            continue
+                        pad_amt = 20 - (len(header) + len(content))
+                        self.updateItem(row, content, col_pos=len(header)+1, pad=pad_amt)
+                    time.sleep(1)
 
     def updateItem(self, row, content, col_pos=0, pad=0):
         with self.lock:
@@ -267,6 +270,8 @@ class Display:
             self.lcd.write_string("\x00")
 
     def select(self):
+        s = Snake(self, self.keyboard)
+        s.start()
         currentChild = self.currentMenu.getNthChild(self.pos)
         if self.inNav:
             if self.navPos == 0:
