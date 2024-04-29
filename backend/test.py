@@ -28,21 +28,23 @@ def testTc():
     def read_temperature():
         GPIO.output(CS, GPIO.LOW)
         time.sleep(0.001)
-        raw = spi.xfer2([0x00, 0x00, 0x00, 0x00])  # Sending 4 bytes to read 4 bytes
+        raw = spi.xfer2([0x00, 0x00, 0x00, 0x00])
         print("Raw data:", [hex(x) for x in raw])
         GPIO.output(CS, GPIO.HIGH)
         value = raw[0] << 24 | raw[1] << 16 | raw[2] << 8 | raw[3]
 
-        # Check for any fault bits
         if value & 0x7:
-            return float('NaN')  # Return NaN if there is a fault
+            return float('NaN')  # Check for fault bits and return NaN if any
 
-        # Extract the temperature (14 MSB of the 32-bit reading are the temperature data)
-        temp = value >> 18
-        if temp & 0x2000:  # Check if the temperature is negative
-            temp -= 16384
+        # Get only the 14 bits of temperature data
+        temp = (value >> 18)
 
-        return temp * 0.25  # The temperature data is in 0.25 degree increments
+        # Handle two's complement for negative temperatures
+        if temp >= 0x2000:
+            temp = -((temp ^ 0x3FFF) + 1)
+
+        return temp * 0.25  # Convert the temperature to Celsius
+
 
     # Example Usage
     for t in [0,1,7]:

@@ -1,7 +1,7 @@
 from RPLCD.i2c import CharLCD
 import time, threading
 from games.snake import Snake
-from collections import deque
+import queue 
 
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None):
@@ -88,14 +88,10 @@ class ToggleItem(MenuItem):
                 self.off_action()
 
     def toggle(self):
-        print("ToggleItem toggled")
         if self.on:
             self.stop()  
         else:
             self.start() 
-
-        print(self.name) 
-
 
 class Display:
     def __init__(self, cols, rows, i2cAddress, rootMenu, keyboard):
@@ -112,10 +108,11 @@ class Display:
         self.update_queue_thread = threading.Thread(target=self.populate_queue, daemon=True)
         self.update_display_thread = threading.Thread(target=self.run_update, daemon=True)
         self.lock = threading.Lock()
-        self.scheduler_thread.start()
-        self.update_display_thread.start()
         self.keyboard = keyboard
-        self.update_queue = deque(maxlen=10) 
+        self.update_queue = queue.Queue() 
+        self.update_queue_thread.start()
+        self.update_display_thread.start()
+        self.is_updating = False
 
         self.registerCustomChars()
 
@@ -202,24 +199,27 @@ class Display:
 
     def populate_queue(self):
         while True:
-            self.update_queue.extendleft((child.row, child.name, time.time(), update()) for child in enumerate(self.currentMenu) if (update := child.update) is not None)
-            time.sleep(0.75)
+            for row, child in enumerate(self.currentMenu):
+                if child.update is not None:
+                    self.update_queue.put((row, child.name, time.time(), child.update()))
+                time.sleep(1)
 
     def run_update(self):
-      with self.lock:
-        while self.update_queue:
-          row, name, rtime, update = self.update_queue.popleft()
-          if len(name) + len(update) > 20:
-            print("info: skipping update. content is too long.")
-            continue
-
-          # stop items from updating too frequently
-          if time.time() - rtime < 0.5:
-              continue
-
-          pad_amt = 20 - (len(name) + len(update))
-          self.updateItem(row, update, col_pos=len(update)+1, pad=pad_amt)
-        time.sleep(0.1)
+        while True: 
+            if not self.update_queue:
+                time.sleep(1)
+                continue
+            row, name, rtime, update = self.update_queue.get()
+            if len(name) + len(update) > 20:
+                print("info: skipping update. content is too long.")
+                self.update_queue.task_done()
+                continue
+            self.is_updating = True
+            pad_amt = 20 - (len(name) + len(update))
+            self.updateItem(row, update, col_pos=len(name)+1, pad=pad_amt)
+            self.update_queue.task_done()
+            self.is_updating = False
+            time.sleep(1.5)
 
     def updateItem(self, row, content, col_pos=0, pad=0):
         with self.lock:
@@ -230,6 +230,8 @@ class Display:
             self.lcd.write_string(line)
 
     def drawNavigation(self):
+        if self.is_updating:
+            return
         icons = ["\x02", "\x03"]
         if self.inNav:
             if self.navPos == 0:
@@ -237,12 +239,15 @@ class Display:
             else:
                 icons[1] = "\x05"
 
-        self.lcd.cursor_pos = (0, self.cols)  # home button
-        self.lcd.write_string(icons[0])
-        self.lcd.cursor_pos = (self.rows, self.cols)  # draw back button
-        self.lcd.write_string(icons[1])
+        with self.lock:
+            self.lcd.cursor_pos = (0, self.cols)  # home button
+            self.lcd.write_string(icons[0])
+            self.lcd.cursor_pos = (self.rows, self.cols)  # draw back button
+            self.lcd.write_string(icons[1])
 
     def drawMenu(self):
+        if self.is_updating:
+            return
         self.lcd.clear()
 
         for row, child in enumerate(self.currentMenu):
@@ -259,7 +264,8 @@ class Display:
                 line += "\x06"
 
             self.lcd.cursor_pos = (row, 0)
-            self.lcd.write_string(line)
+            with self.lock:
+                self.lcd.write_string(line)
 
         self.drawNavigation()
 
@@ -267,6 +273,8 @@ class Display:
         self.lcd.close(clear=clear)
 
     def move(self, new):
+        if self.is_updating:
+            return
         if self.inNav:
             self.navPos = (self.navPos + new) % 2
             self.drawNavigation()
@@ -279,17 +287,21 @@ class Display:
             self.lcd.write_string("\x00")
 
     def select(self):
-        s = Snake(self, self.keyboard)
-        s.start()
+        if self.is_updating:
+            return
         currentChild = self.currentMenu.getNthChild(self.pos)
         if self.inNav:
+            # clear queue here?
+            with self.lock:
+                while self.update_queue:
+                    self.update_queue.get_nowait()
             if self.navPos == 0:
                 self.currentMenu = self.rootMenu
                 self.outNav()
                 self.drawMenu()
             else:
                 self.back()
-        elif hasattr(currentChild, 'toggle'): # check for toggle
+        elif hasattr(currentChild, 'toggle') and not self.is_updating: # check for toggle
             currentChild.toggle()
             self.drawMenu()
         elif currentChild.hasAction():

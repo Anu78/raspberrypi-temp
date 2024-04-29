@@ -2,9 +2,7 @@ import RPi.GPIO as gp
 import time, threading
 
 class Heater:
-    def __init__(self, lRelay, rRelay, readTc, db):
-        if not callable(readTc):
-            raise TypeError("readTc must be callable.")
+    def __init__(self, lRelay, rRelay, temp_reader):
         self.targetTemp = None
         self.lpin = lRelay
         self.rpin = rRelay
@@ -12,7 +10,7 @@ class Heater:
         gp.setup(self.lpin, gp.OUT)
         gp.setup(self.rpin, gp.OUT)
         self.off()
-        self.readTc = readTc
+        self.temp_reader = temp_reader 
         self.getTargetTemp()
         self.thread = None
         self.running = False
@@ -44,9 +42,9 @@ class Heater:
       gp.output(self.rpin, False)
 
     def preheat(self):
-        left = float(self.readTc(0)[:-1])
-        right = float(self.readTc(2)[:-1])
-        bag = float(self.readTc(7)[:-1])
+        left = float(self.temp_reader.read_specific(0)[:-1])
+        right = float(self.temp_reader.read_specific(1)[:-1])
+        bag = float(self.temp_reader.read_specific(7)[:-1])
 
         self.start_time = time.time()
         self.on()
@@ -64,17 +62,18 @@ class Heater:
 
             time.sleep(1)
             
-            self.post_temperature()
+            # self.post_temperature()
 
             # temporary - record to csv 
-            self.record(self, "../data/temps.csv", left, right, bag)
+            self.record("backend/data/temps.csv", left, right, bag)
 
             # post individual temp to db
             # self.post_temperature(left, right)
 
+            print(left, right)
             # update temps
-            left = float(self.readTc(0)[:-1])
-            right = float(self.readTc(2)[:-1])
+            left = float(self.temp_reader.read_specific(0)[:-1])
+            right = float(self.temp_reader.read_specific(1)[:-1])
         
 
         # final run post to db - excluded at the moment
@@ -82,8 +81,8 @@ class Heater:
     
     def record(self, csvPath, left, right, bag):
       meas_time = time.time() - self.start_time
-      with open(csvPath, 'w') as file:
-          file.write(f"{meas_time},{left[:-1]},{right[:-1]},{bag[:-1]}\n")
+      with open(csvPath, 'a') as file:
+          file.write(f"{meas_time},{left},{right},{bag}\n")
 
     def post_temperature(self, left, right):
         pass

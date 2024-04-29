@@ -31,5 +31,3 @@ def plot_temperatures(csv_file):
 
 def map_range(value, old_min, old_max, new_min, new_max):
     return (value - old_min) * (new_max - new_min) / (old_max - old_min) + new_min
-
-plot_temperatures("backend/data/temps.csv")

@@ -95,10 +95,10 @@ class Snake:
     self.lcd.create_char(2, food)
   def exit(self): 
     # re-register normal custom characters
-    self.lcd.registerCustomChars()
+    self.display.registerCustomChars()
     
     # re-draw menu just in case
-    self.lcd.drawMenu()
+    self.display.drawMenu()
   def draw(self):
     # draw body
     for i, node in enumerate(self.head):
@@ -152,13 +152,13 @@ class Snake:
   def gameOver(self):
     self.lcd.clear()
 
-    self.lcd.cursor_pos = (0,2)
-    self.lcd.write_string(f"GAME OVER. len {self.score}")
-    self.lcd.write_string(f"highscore: {self.highscore}")
+    self.lcd.cursor_pos = (1,5)
+    self.lcd.write_string(f"score: {self.score}")
+    # self.lcd.write_string(f"highscore: {self.highscore}")
 
-    if self.score > self.highscore:
-      self.lcd.cursor_pos = ((20-len("new high score"))//2,3)
-      self.lcd.write_string(f"new high score!")
+    # if self.score > self.highscore:
+    #   self.lcd.cursor_pos = ((20-len("new high score"))//2,3)
+    #   self.lcd.write_string(f"new high score!")
 
     time.sleep(3)
     self.exit()
@@ -181,10 +181,9 @@ class Snake:
         current_pos = self.head.pos
         for node in self.head.next:
             if node.pos == current_pos:
-                print("you hit yourself")
                 break
 
-        if self.head.pos.x > 19 or self.head.pos.y > 4 or self.head.pos.x < 0 or self.head.pos.y < 0:
+        if self.head.pos.x >= 20 or self.head.pos.y >= 4 or self.head.pos.x < 0 or self.head.pos.y < 0:
           break
 
         self.draw()

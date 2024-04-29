@@ -2,7 +2,7 @@
 import time
 from drivers.stepper import Stepper
 from drivers.display import Display, MenuItem, ToggleItem
-from drivers.thermocouples import readTc 
+from drivers.thermocouples import ThermocoupleReader
 from drivers.keyboard import Keyboard
 from communications.logging import Logger
 from drivers.heater import Heater
@@ -14,11 +14,10 @@ def moveIn():
   stepper.move(-600)
 def compress():
   stepper.compress()
-heater = Heater(17, 16, readTc) # 17 is left.  
 def heater_on():
-  heater.on()
+  heater.start()
 def heater_off():
-  heater.off()
+  heater.stop()
 def start_snake():
   s = Snake(lcd, keyboard)
   s.start()
@@ -37,9 +36,9 @@ def buildMenu():
     motorControl + calibrate 
 
     preheat = MenuItem("heating")
-    preheat + MenuItem("lplate:", update=lambda : readTc(0))
-    preheat + MenuItem("rplate:", update=lambda : readTc(1))
-    preheat + MenuItem("bag:", update=lambda : readTc(7))
+    preheat + MenuItem("lplate:", update=lambda : thermo_reader.read_specific(0))
+    preheat + MenuItem("rplate:", update=lambda : thermo_reader.read_specific(1))
+    preheat + MenuItem("bag:", update=lambda : thermo_reader.read_specific(7))
     preheat + ToggleItem("prepare: ", on_action=heater_on, off_action=heater_off)
 
     about = MenuItem("about")
@@ -72,7 +71,8 @@ logger.setup_logging()
 keyboard = Keyboard()
 lcd = Display(20, 4, 0x27, buildMenu(), keyboard)
 stepper = Stepper(pul=19, dir=27, stepsPerRevolution=3200, limit_switch_pin=10)
-
+thermo_reader = ThermocoupleReader(CS=8, T0=5, T1=6, T2=13)
+heater = Heater(17, 16, thermo_reader) # 17 is left.  
 
 def loop():
     try:
