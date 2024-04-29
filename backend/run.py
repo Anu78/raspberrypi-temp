@@ -6,6 +6,7 @@ from drivers.thermocouples import readTc
 from drivers.keyboard import Keyboard
 from communications.logging import Logger
 from drivers.heater import Heater
+from games.snake import Snake
 
 def moveOut():
   stepper.move(600)
@@ -18,6 +19,9 @@ def heater_on():
   heater.on()
 def heater_off():
   heater.off()
+def start_snake():
+  s = Snake(lcd, keyboard)
+  s.start()
 def buildMenu():
     rootMenu = MenuItem("main menu")
     motorControl = MenuItem("motor control")
@@ -41,7 +45,7 @@ def buildMenu():
     about = MenuItem("about")
     about + MenuItem("sd 2023-24")
     about + MenuItem("code: git - anu78/sd23-24")
-    about + MenuItem("play a game")
+    about + MenuItem("play a game", action=start_snake)
 
     connection = MenuItem("connection")
     connection + MenuItem("ip: ", once=None)

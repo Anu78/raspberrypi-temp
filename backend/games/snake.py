@@ -95,9 +95,10 @@ class Snake:
     self.lcd.create_char(2, food)
   def exit(self): 
     # re-register normal custom characters
+    self.lcd.registerCustomChars()
     
-    # other cleanup
-    pass
+    # re-draw menu just in case
+    self.lcd.drawMenu()
   def draw(self):
     # draw body
     for i, node in enumerate(self.head):
@@ -159,6 +160,7 @@ class Snake:
       self.lcd.cursor_pos = ((20-len("new high score"))//2,3)
       self.lcd.write_string(f"new high score!")
 
+    time.sleep(3)
     self.exit()
   def start(self):
     self.lcd.clear()

@@ -1,6 +1,7 @@
 from RPLCD.i2c import CharLCD
 import time, threading
 from games.snake import Snake
+from collections import deque
 
 class MenuItem:
     def __init__(self, name, action=None, update=None, once=None, background=False):
@@ -109,11 +110,11 @@ class Display:
         self.inNav = False
         self.rootMenu = rootMenu
         self.currentMenu = rootMenu
-        self.updateActive = False
         self.scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
         self.lock = threading.Lock()
         self.scheduler_thread.start()
         self.keyboard = keyboard
+        self.updateQueue = deque(maxlen=10) 
 
         self.registerCustomChars()
 
@@ -198,19 +199,26 @@ class Display:
         for i, ch in enumerate(chars):
             self.lcd.create_char(i,ch)
 
-    def run_scheduler(self):
-        with self.lock:
-            while True:
-                for row, child in enumerate(self.currentMenu):
-                    if child.update is not None:
-                        content = child.update()
-                        header = child.name
-                        if len(header) + len(content) > 20:
-                            print("info: skipping update. content is too long.")
-                            continue
-                        pad_amt = 20 - (len(header) + len(content))
-                        self.updateItem(row, content, col_pos=len(header)+1, pad=pad_amt)
-                    time.sleep(1)
+    def populate_queue(self):
+        while True:
+            self.updateQueue.extendleft((child.row, child.name, time.time(), update()) for child in enumerate(self.currentMenu) if (update := child.update) is not None)
+            time.sleep(0.75)
+
+    def run_update(self):
+      with self.lock:
+        while self.updateQueue:
+          row, name, rtime, update = self.updateQueue.popleft()
+          if len(name) + len(update) > 20:
+            print("info: skipping update. content is too long.")
+            continue
+
+          # stop items from updating too frequently
+          if time.time() - rtime < 0.5:
+              continue
+
+          pad_amt = 20 - (len(name) + len(update))
+          self.updateItem(row, update, col_pos=len(update)+1, pad=pad_amt)
+        time.sleep(0.1)
 
     def updateItem(self, row, content, col_pos=0, pad=0):
         with self.lock:
