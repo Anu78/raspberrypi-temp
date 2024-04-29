@@ -2,7 +2,7 @@
 
 This is my senior design project at UNCC for the year 2023-2024. This repository contains all the code and the wiring diagram for the machine that we built. Send an email [here](mailto:awarudka@uncc.edu) for questions or if you are the future team working on this device. 
 
-## architecture.md
+## architecture
 There are two main components to this project. A react website (todo) that can be used to control the device, view active temperatures, etc (written in typescript, in the src/ directory). The main part of the project lies under the backend/ directory, which contains standard Python code to interface with the electronics. 
 
 ### react website
@@ -35,4 +35,5 @@ You can start the device by running ```./run.sh``` from the root directory. You 
 1. This codebase is quite large, coming in at around 1200 lines of code (you can measure using ```./lc.sh```). I'm certain some of these components could be re-written to be more efficient. 
 2. The electronics and wiring could be laid out way better. Right now, there are wires all over the place and I'm sure that with a little more thought it could look a lot prettier. 
 3. There is no physical kill switch (in the rare event that something happens). This might have to be placed between the power supply and the wall outlet.
-4. There are also a lot of other issues with the actual design of the device, and I really think the best way forward is to make the device more compact and use a more powerful heating element to speed up the preheating process (which takes around 5 minutes now).
+4. There are also a lot of other issues with the actual design of the device, and I really think the best way forward is to make a brand new device that's more compact and uses a more powerful heating element to speed up the preheating process (which takes around 5 minutes now).
+5. The thermocouple wires are a little bit fragile (the only way to fix this was to solder them, but because we were prototyping we left it out.)
