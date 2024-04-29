@@ -15,7 +15,7 @@ to add all dependencies. Then you can start the website with
 pnpm run dev
 ```
 
-The website is also being served at the HTTP port (port 80) on the raspberry pi (it should be accessible at http://organoids.local on the eduroam network). 
+The goal is to have website served at the HTTP port (port 80) on the raspberry pi (it should then be accessible at http://organoids.local on the eduroam network).
 
 
 ### python backend
@@ -37,3 +37,4 @@ You can start the device by running ```./run.sh``` from the root directory. You 
 3. There is no physical kill switch (in the rare event that something happens). This might have to be placed between the power supply and the wall outlet.
 4. There are also a lot of other issues with the actual design of the device, and I really think the best way forward is to make a brand new device that's more compact and uses a more powerful heating element to speed up the preheating process (which takes around 5 minutes now).
 5. The thermocouple wires are a little bit fragile (the only way to fix this was to solder them, but because we were prototyping we left it out.)
+6. Half of this project is camelCase, and the other half is snake_case. Snake case is superior; I hope this gets fixed soon. 
