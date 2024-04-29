@@ -4,15 +4,14 @@ from games.snake import Snake
 from collections import deque
 
 class MenuItem:
-    def __init__(self, name, action=None, update=None, once=None, background=False):
+    def __init__(self, name, action=None, update=None, once=None):
         self.name = name
         self.count = 0
         self.parent = None
         self.children = []
-        self.setAction(action)
-        self.setUpdate(update)
+        self.set_action(action)
+        self.set_update(update)
         self.setOnce(once)
-        self.background = background
 
     def __add__(self, child):
         if not isinstance(child, MenuItem):
@@ -54,11 +53,11 @@ class MenuItem:
         return wrapper
 
     @_checkCallable
-    def setAction(self, action):
+    def set_action(self, action):
         self.action = action
 
     @_checkCallable
-    def setUpdate(self, update):
+    def set_update(self, update):
         self.update = update
 
     @_checkCallable
@@ -110,11 +109,13 @@ class Display:
         self.inNav = False
         self.rootMenu = rootMenu
         self.currentMenu = rootMenu
-        self.scheduler_thread = threading.Thread(target=self.run_scheduler, daemon=True)
+        self.update_queue_thread = threading.Thread(target=self.populate_queue, daemon=True)
+        self.update_display_thread = threading.Thread(target=self.run_update, daemon=True)
         self.lock = threading.Lock()
         self.scheduler_thread.start()
+        self.update_display_thread.start()
         self.keyboard = keyboard
-        self.updateQueue = deque(maxlen=10) 
+        self.update_queue = deque(maxlen=10) 
 
         self.registerCustomChars()
 
@@ -201,13 +202,13 @@ class Display:
 
     def populate_queue(self):
         while True:
-            self.updateQueue.extendleft((child.row, child.name, time.time(), update()) for child in enumerate(self.currentMenu) if (update := child.update) is not None)
+            self.update_queue.extendleft((child.row, child.name, time.time(), update()) for child in enumerate(self.currentMenu) if (update := child.update) is not None)
             time.sleep(0.75)
 
     def run_update(self):
       with self.lock:
-        while self.updateQueue:
-          row, name, rtime, update = self.updateQueue.popleft()
+        while self.update_queue:
+          row, name, rtime, update = self.update_queue.popleft()
           if len(name) + len(update) > 20:
             print("info: skipping update. content is too long.")
             continue
