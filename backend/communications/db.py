@@ -5,6 +5,7 @@ from logging import Logger
 needs to store: logs, sensor values, # of motor steps, ip addr on startup, and a way to store temporary measurements for x-minute durations (time-series data) 
 """
 
+
 class Database:
   PARENT_DIR = Path(__file__).resolve().parent.parent
   PARAMS_LIST = ["snake_highscore", "motor_compress_steps", "target_temperature"]
@@ -26,9 +27,11 @@ class Database:
       self.con.commit()
       self.cur.execute("insert into params (key, value) values ('snake_highscore','0'), ('motor_compress_steps', '0'), ('target_temperature', '0')")
       self.con.commit()
+
   def get_parameters(self):
     res = self.cur.execute("select * from params")
     return {key:float(value) for key, value in res.fetchall()}
+
   def update_parameter(self, param, value):
     try:
       self.cur.execute(f"update params set value = '{value}' where key = '{param}'")
@@ -38,6 +41,8 @@ class Database:
     finally:
       return True
   def put_sensor_value(self, sensor, value):
-    pass
+    res = self.cur.execute(f"update sensorData set value = {value} where name = '{sensor}'") 
+    self.con.commit()
   def read_sensor_value(self, sensor):
-    pass
+    query = self.cur.execute(f"select value from sensorData where name = '{sensor}'")
+    return query.fetchone()[0]

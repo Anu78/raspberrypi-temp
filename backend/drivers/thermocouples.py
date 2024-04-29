@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import spidev
 import time
+import os, sys
+
 
 class ThermocoupleReader:
     def __init__(self, CS, T0, T1, T2, read_interval=0.5):
@@ -10,7 +12,6 @@ class ThermocoupleReader:
         self.T2 = T2
         self.read_interval = read_interval
         self.last_read_time = 0
-        self.latest = {}
         
         self.spi = spidev.SpiDev()
         self.setup_gpio()
@@ -39,7 +40,14 @@ class ThermocoupleReader:
     def read_temperature(self, num):
         current_time = time.time()
         if current_time - self.last_read_time < self.read_interval:
-            return self.latest.get(num, "0C")
+            r = ""
+            if num == 0:
+                r = "left plate"
+            if num == 1:
+                r = "right plate"
+            if num == 7:
+                r = "bags"
+            return str(self.db.get(r)) + "C"
 
         GPIO.output(self.CS, GPIO.LOW)
         time.sleep(0.001)  
@@ -56,7 +64,14 @@ class ThermocoupleReader:
         if temp & 0x2000:  
             temp -= 16384
 
-        self.latest[num] = str(temp * 0.25) + "C"
+        r = ""
+        if num == 0:
+            r = "left plate"
+        if num == 1:
+            r = "right plate"
+        if num == 7:
+            r = "bags"
+
         return str(temp * 0.25) + "C"  
 
     def cleanup(self):

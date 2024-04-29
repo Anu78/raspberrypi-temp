@@ -5,6 +5,7 @@ from drivers.display import Display, MenuItem, ToggleItem
 from drivers.thermocouples import ThermocoupleReader
 from drivers.keyboard import Keyboard
 from communications.logging import Logger
+from communications.db import Database
 from drivers.heater import Heater
 from games.snake import Snake
 
@@ -67,12 +68,13 @@ def cleanup():
 
 # globals
 logger = Logger()
+db = Database()
 logger.setup_logging()
 keyboard = Keyboard()
 lcd = Display(20, 4, 0x27, buildMenu(), keyboard)
 stepper = Stepper(pul=19, dir=27, stepsPerRevolution=3200, limit_switch_pin=10)
 thermo_reader = ThermocoupleReader(CS=8, T0=5, T1=6, T2=13)
-heater = Heater(17, 16, thermo_reader) # 17 is left.  
+heater = Heater(17, 16) # 17 is left.  
 
 def loop():
     try:

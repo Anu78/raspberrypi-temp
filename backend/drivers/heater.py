@@ -1,8 +1,9 @@
 import RPi.GPIO as gp
 import time, threading
 
+
 class Heater:
-    def __init__(self, lRelay, rRelay, temp_reader):
+    def __init__(self, lRelay, rRelay):
         self.targetTemp = None
         self.lpin = lRelay
         self.rpin = rRelay
@@ -10,7 +11,6 @@ class Heater:
         gp.setup(self.lpin, gp.OUT)
         gp.setup(self.rpin, gp.OUT)
         self.off()
-        self.temp_reader = temp_reader 
         self.thread = None
         self.running = False
         self.start_time = None
@@ -40,9 +40,9 @@ class Heater:
       gp.output(self.rpin, False)
 
     def preheat(self):
-        left = float(self.temp_reader.read_specific(0)[:-1])
-        right = float(self.temp_reader.read_specific(1)[:-1])
-        bag = float(self.temp_reader.read_specific(7)[:-1])
+        left = self.db.read_sensor_value("left plate")
+        right = self.db.read_sensor_value("right plate")
+        bag = self.db.read_sensor_value("bags")
 
         self.start_time = time.time()
         self.on()
@@ -68,10 +68,10 @@ class Heater:
             # post individual temp to db
             # self.post_temperature(left, right)
 
-            print(left, right)
             # update temps
-            left = float(self.temp_reader.read_specific(0)[:-1])
-            right = float(self.temp_reader.read_specific(1)[:-1])
+            print(left, right)
+            left = self.db.read_sensor_value("left plate")
+            right = self.db.read_sensor_value("right plate")
         
 
         # final run post to db - excluded at the moment

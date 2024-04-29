@@ -131,12 +131,15 @@ class Snake:
         self.head.pos.x += 1
 
     current_node = self.head.next
+    # old_tail = None
     while current_node is not None:
         temp_pos = Point(current_node.pos.x, current_node.pos.y)
         current_node.pos = prev_pos
         prev_pos = temp_pos
+        # old_tail = current_node
         current_node = current_node.next
-
+    
+    # return old_tail.pos if old_tail else None
 
   def change_direction(self, current_direction, new_direction):
     if current_direction == 'u' and new_direction == 'd':

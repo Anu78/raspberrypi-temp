@@ -38,3 +38,4 @@ You can start the device by running ```./run.sh``` from the root directory. You 
 4. There are also a lot of other issues with the actual design of the device, and I really think the best way forward is to make a brand new device that's more compact and uses a more powerful heating element to speed up the preheating process (which takes around 5 minutes now).
 5. The thermocouple wires are a little bit fragile (the only way to fix this was to solder them, but because we were prototyping we left it out.)
 6. Half of this project is camelCase, and the other half is snake_case. Snake case is superior; I hope this gets fixed soon. 
+7. In order to prevent multiple sources writing to the display at the same time, I had to implement updating flags. It's not 100% foolproof, but it's a lot better than without the flags. Sometimes, if you're too fast or unlucky, the display will bug out. 
