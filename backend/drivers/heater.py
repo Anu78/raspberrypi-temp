@@ -11,12 +11,10 @@ class Heater:
         gp.setup(self.rpin, gp.OUT)
         self.off()
         self.temp_reader = temp_reader 
-        self.getTargetTemp()
         self.thread = None
         self.running = False
         self.start_time = None
-
-    def getTargetTemp(self):
+        
         # a db parameter call here soon
         self.targetTemp = 30
     

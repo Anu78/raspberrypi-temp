@@ -199,6 +199,9 @@ class Display:
 
     def populate_queue(self):
         while True:
+            if all(child.update is None for child in self.currentMenu):
+                time.sleep(1)
+                continue
             for row, child in enumerate(self.currentMenu):
                 if child.update is not None:
                     self.update_queue.put((row, child.name, time.time(), child.update()))
@@ -207,6 +210,10 @@ class Display:
     def run_update(self):
         while True: 
             if not self.update_queue:
+                self.is_updating = False
+                time.sleep(1)
+                continue
+            if all(child.update is None for child in self.currentMenu):
                 time.sleep(1)
                 continue
             row, name, rtime, update = self.update_queue.get()
@@ -218,6 +225,7 @@ class Display:
             pad_amt = 20 - (len(name) + len(update))
             self.updateItem(row, update, col_pos=len(name)+1, pad=pad_amt)
             self.update_queue.task_done()
+            time.sleep(0.2)
             self.is_updating = False
             time.sleep(1.5)
 
@@ -292,9 +300,9 @@ class Display:
         currentChild = self.currentMenu.getNthChild(self.pos)
         if self.inNav:
             # clear queue here?
-            with self.lock:
-                while self.update_queue:
-                    self.update_queue.get_nowait()
+            # with self.lock:
+            #     while self.update_queue:
+            #         self.update_queue.get_nowait()
             if self.navPos == 0:
                 self.currentMenu = self.rootMenu
                 self.outNav()

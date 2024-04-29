@@ -15,9 +15,9 @@ def moveIn():
 def compress():
   stepper.compress()
 def heater_on():
-  heater.start()
+  heater.on()
 def heater_off():
-  heater.stop()
+  heater.off()
 def start_snake():
   s = Snake(lcd, keyboard)
   s.start()

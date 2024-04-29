@@ -3,7 +3,7 @@ import spidev
 import time
 
 class ThermocoupleReader:
-    def __init__(self, CS, T0, T1, T2, read_interval=1):
+    def __init__(self, CS, T0, T1, T2, read_interval=0.5):
         self.CS = CS
         self.T0 = T0
         self.T1 = T1
@@ -39,7 +39,7 @@ class ThermocoupleReader:
     def read_temperature(self, num):
         current_time = time.time()
         if current_time - self.last_read_time < self.read_interval:
-            return self.latest[num]
+            return self.latest.get(num, "0C")
 
         GPIO.output(self.CS, GPIO.LOW)
         time.sleep(0.001)  
